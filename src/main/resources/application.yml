@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: requestfrombranch
+  datasource:
+    url: jdbc:mysql://34.134.201.190:3306/db_peds?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: developer-01
+    password: P@ssw0rd
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      fail-on-empty-beans: false
+  
+  
