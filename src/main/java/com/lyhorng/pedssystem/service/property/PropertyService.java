@@ -44,40 +44,43 @@ public class PropertyService {
     // ==================== CREATE ====================
     public PropertyResponseDto createProperty(PropertyRequestDto requestDto) {
         log.info("Creating new property with evaluation status: {}", requestDto.getEvaStatus());
-        
+
         // Validate existing application code for RENEW status
         if (requestDto.getEvaStatus() == EvaStatus.RENEW) {
             if (requestDto.getExistApplicationCode() == null || requestDto.getExistApplicationCode().isEmpty()) {
                 throw new IllegalArgumentException("Existing application code is required for RENEW status");
             }
         }
-        
+
         Property property = new Property();
-        
+
         // Set branch request
         BranchRequest branchRequest = branchRequestRepository.findById(requestDto.getBranchRequestId())
-                .orElseThrow(() -> new ResourceNotFoundException("Branch request not found with id: " + requestDto.getBranchRequestId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Branch request not found with id: " + requestDto.getBranchRequestId()));
         property.setBranchRequest(branchRequest);
-        
+
         // Set basic fields
         property.setEvaStatus(requestDto.getEvaStatus());
         property.setExistApplicationCode(requestDto.getExistApplicationCode());
         property.setApplicationCode(generateUniqueApplicationCode());
         property.setEvaCycle(requestDto.getEvaCycle());
         property.setIsOwnershipTitle(requestDto.getIsOwnershipTitle());
-        
+
         // Set owner
         Customer owner = customerRepository.findById(requestDto.getOwnerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Owner not found with id: " + requestDto.getOwnerId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Owner not found with id: " + requestDto.getOwnerId()));
         property.setOwner(owner);
-        
+
         // Set co-owner if provided
         if (requestDto.getCoOwnerId() != null) {
             Customer coOwner = customerRepository.findById(requestDto.getCoOwnerId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Co-owner not found with id: " + requestDto.getCoOwnerId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Co-owner not found with id: " + requestDto.getCoOwnerId()));
             property.setCoOwner(coOwner);
         }
-        
+
         // Set property details
         property.setPropertyTitleType(propertyTitleTypeRepository.findById(requestDto.getPropertyTitleTypeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Property title type not found")));
@@ -86,7 +89,7 @@ public class PropertyService {
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found")));
         property.setPropertySpecific(propertySpecificRepository.findById(requestDto.getPropertySpecificId())
                 .orElseThrow(() -> new ResourceNotFoundException("Property specific not found")));
-        
+
         // Set location
         property.setProvince(provinceRepository.findById(requestDto.getProvinceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Province not found")));
@@ -94,56 +97,56 @@ public class PropertyService {
                 .orElseThrow(() -> new ResourceNotFoundException("District not found")));
         property.setCommune(communeRepository.findById(requestDto.getCommuneId())
                 .orElseThrow(() -> new ResourceNotFoundException("Commune not found")));
-        
+
         if (requestDto.getVillageId() != null) {
             property.setVillage(villageRepository.findById(requestDto.getVillageId())
                     .orElseThrow(() -> new ResourceNotFoundException("Village not found")));
         }
-        
+
         // Set measure info
         property.setMeasureInfo(propertyMeasureInfoRepository.findById(requestDto.getMeasureInfoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Measure info not found")));
-        
+
         // Set other fields
         property.setIsKeepRecordEvaluation(requestDto.getIsKeepRecordEvaluation());
         property.setRemark(requestDto.getRemark());
-        
+
         Property savedProperty = propertyRepository.save(property);
         log.info("Property created successfully with application code: {}", savedProperty.getApplicationCode());
-        
+
         return convertToResponseDto(savedProperty);
     }
 
     // ==================== UPDATE ====================
     public PropertyResponseDto updateProperty(Long id, PropertyRequestDto requestDto) {
         log.info("Updating property with id: {}", id);
-        
+
         Property property = propertyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + id));
-        
+
         // Validate existing application code for RENEW status
         if (requestDto.getEvaStatus() == EvaStatus.RENEW) {
             if (requestDto.getExistApplicationCode() == null || requestDto.getExistApplicationCode().isEmpty()) {
                 throw new IllegalArgumentException("Existing application code is required for RENEW status");
             }
         }
-        
+
         // Update branch request
         BranchRequest branchRequest = branchRequestRepository.findById(requestDto.getBranchRequestId())
                 .orElseThrow(() -> new ResourceNotFoundException("Branch request not found"));
         property.setBranchRequest(branchRequest);
-        
+
         // Update basic fields
         property.setEvaStatus(requestDto.getEvaStatus());
         property.setExistApplicationCode(requestDto.getExistApplicationCode());
         property.setEvaCycle(requestDto.getEvaCycle());
         property.setIsOwnershipTitle(requestDto.getIsOwnershipTitle());
-        
+
         // Update owner
         Customer owner = customerRepository.findById(requestDto.getOwnerId())
                 .orElseThrow(() -> new ResourceNotFoundException("Owner not found"));
         property.setOwner(owner);
-        
+
         // Update co-owner
         if (requestDto.getCoOwnerId() != null) {
             Customer coOwner = customerRepository.findById(requestDto.getCoOwnerId())
@@ -152,7 +155,7 @@ public class PropertyService {
         } else {
             property.setCoOwner(null);
         }
-        
+
         // Update property details
         property.setPropertyTitleType(propertyTitleTypeRepository.findById(requestDto.getPropertyTitleTypeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Property title type not found")));
@@ -161,7 +164,7 @@ public class PropertyService {
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found")));
         property.setPropertySpecific(propertySpecificRepository.findById(requestDto.getPropertySpecificId())
                 .orElseThrow(() -> new ResourceNotFoundException("Property specific not found")));
-        
+
         // Update location
         property.setProvince(provinceRepository.findById(requestDto.getProvinceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Province not found")));
@@ -169,25 +172,25 @@ public class PropertyService {
                 .orElseThrow(() -> new ResourceNotFoundException("District not found")));
         property.setCommune(communeRepository.findById(requestDto.getCommuneId())
                 .orElseThrow(() -> new ResourceNotFoundException("Commune not found")));
-        
+
         if (requestDto.getVillageId() != null) {
             property.setVillage(villageRepository.findById(requestDto.getVillageId())
                     .orElseThrow(() -> new ResourceNotFoundException("Village not found")));
         } else {
             property.setVillage(null);
         }
-        
+
         // Update measure info
         property.setMeasureInfo(propertyMeasureInfoRepository.findById(requestDto.getMeasureInfoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Measure info not found")));
-        
+
         // Update other fields
         property.setIsKeepRecordEvaluation(requestDto.getIsKeepRecordEvaluation());
         property.setRemark(requestDto.getRemark());
-        
+
         Property updatedProperty = propertyRepository.save(property);
         log.info("Property updated successfully with id: {}", id);
-        
+
         return convertToResponseDto(updatedProperty);
     }
 
@@ -195,10 +198,10 @@ public class PropertyService {
     @Transactional(readOnly = true)
     public PropertyResponseDto getPropertyById(Long id) {
         log.info("Fetching property with id: {}", id);
-        
+
         Property property = propertyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + id));
-        
+
         return convertToResponseDto(property);
     }
 
@@ -206,7 +209,7 @@ public class PropertyService {
     @Transactional(readOnly = true)
     public List<PropertyResponseDto> getAllProperties() {
         log.info("Fetching all properties");
-        
+
         return propertyRepository.findAll().stream()
                 .map(this::convertToResponseDto)
                 .collect(Collectors.toList());
@@ -215,10 +218,10 @@ public class PropertyService {
     // ==================== DELETE ====================
     public void deleteProperty(Long id) {
         log.info("Deleting property with id: {}", id);
-        
+
         Property property = propertyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + id));
-        
+
         propertyRepository.delete(property);
         log.info("Property deleted successfully with id: {}", id);
     }
@@ -227,17 +230,18 @@ public class PropertyService {
     @Transactional(readOnly = true)
     public PropertyResponseDto getPropertyByApplicationCode(String applicationCode) {
         log.info("Fetching property with application code: {}", applicationCode);
-        
+
         Property property = propertyRepository.findByApplicationCode(applicationCode)
-                .orElseThrow(() -> new ResourceNotFoundException("Property not found with application code: " + applicationCode));
-        
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Property not found with application code: " + applicationCode));
+
         return convertToResponseDto(property);
     }
 
     @Transactional(readOnly = true)
     public List<PropertyResponseDto> getPropertiesByEvaStatus(EvaStatus evaStatus) {
         log.info("Fetching properties with evaluation status: {}", evaStatus);
-        
+
         return propertyRepository.findByEvaStatus(evaStatus).stream()
                 .map(this::convertToResponseDto)
                 .collect(Collectors.toList());
@@ -246,7 +250,7 @@ public class PropertyService {
     @Transactional(readOnly = true)
     public List<PropertyResponseDto> getPropertiesByOwnerId(Long ownerId) {
         log.info("Fetching properties for owner id: {}", ownerId);
-        
+
         return propertyRepository.findByOwnerId(ownerId).stream()
                 .map(this::convertToResponseDto)
                 .collect(Collectors.toList());
@@ -256,9 +260,10 @@ public class PropertyService {
     private String generateUniqueApplicationCode() {
         String code;
         do {
-            code = generateRandomCode(11);
+            code = generateRandomCode(8); // Generate 8 random digits
+            code = "Col" + String.format("%08d", Integer.parseInt(code)); // Prefix "Col" and zero-pad to 8 digits
         } while (propertyRepository.existsByApplicationCode(code));
-        
+
         return code;
     }
 
@@ -274,7 +279,7 @@ public class PropertyService {
     private PropertyResponseDto convertToResponseDto(Property property) {
         PropertyResponseDto dto = new PropertyResponseDto();
         dto.setId(property.getId());
-        
+
         // Branch Request
         if (property.getBranchRequest() != null) {
             BranchRequestSummaryDto branchDto = new BranchRequestSummaryDto();
@@ -282,13 +287,13 @@ public class PropertyService {
             // Set other branch fields as needed
             dto.setBranchRequest(branchDto);
         }
-        
+
         dto.setEvaStatus(property.getEvaStatus());
         dto.setExistApplicationCode(property.getExistApplicationCode());
         dto.setApplicationCode(property.getApplicationCode());
         dto.setEvaCycle(property.getEvaCycle());
         dto.setIsOwnershipTitle(property.getIsOwnershipTitle());
-        
+
         // Owner
         if (property.getOwner() != null) {
             CustomerSummaryDto ownerDto = new CustomerSummaryDto();
@@ -296,7 +301,7 @@ public class PropertyService {
             // Set other owner fields from Customer entity
             dto.setOwner(ownerDto);
         }
-        
+
         // Co-Owner
         if (property.getCoOwner() != null) {
             CustomerSummaryDto coOwnerDto = new CustomerSummaryDto();
@@ -304,7 +309,7 @@ public class PropertyService {
             // Set other co-owner fields from Customer entity
             dto.setCoOwner(coOwnerDto);
         }
-        
+
         // Property Title Type
         if (property.getPropertyTitleType() != null) {
             PropertyTitleTypeSummaryDto titleTypeDto = new PropertyTitleTypeSummaryDto();
@@ -312,9 +317,9 @@ public class PropertyService {
             titleTypeDto.setTypeName(property.getPropertyTitleType().getTitleType());
             dto.setPropertyTitleType(titleTypeDto);
         }
-        
+
         dto.setTitleNumber(property.getTitleNumber());
-        
+
         // Category
         if (property.getCategory() != null) {
             CategorySummaryDto categoryDto = new CategorySummaryDto();
@@ -322,7 +327,7 @@ public class PropertyService {
             categoryDto.setCategoryName(property.getCategory().getCategory());
             dto.setCategory(categoryDto);
         }
-        
+
         // Property Specific
         if (property.getPropertySpecific() != null) {
             PropertySpecificSummaryDto specificDto = new PropertySpecificSummaryDto();
@@ -330,40 +335,40 @@ public class PropertyService {
             specificDto.setSpecificName(property.getPropertySpecific().getName());
             dto.setPropertySpecific(specificDto);
         }
-        
+
         // Location
         LocationDto locationDto = new LocationDto();
-        
+
         if (property.getProvince() != null) {
             ProvinceSummaryDto provinceDto = new ProvinceSummaryDto();
             provinceDto.setId(property.getProvince().getId());
             provinceDto.setProvinceName(property.getProvince().getName());
             locationDto.setProvince(provinceDto);
         }
-        
+
         if (property.getDistrict() != null) {
             DistrictSummaryDto districtDto = new DistrictSummaryDto();
             districtDto.setId(property.getDistrict().getId());
             districtDto.setDistrictName(property.getDistrict().getName());
             locationDto.setDistrict(districtDto);
         }
-        
+
         if (property.getCommune() != null) {
             CommuneSummaryDto communeDto = new CommuneSummaryDto();
             communeDto.setId(property.getCommune().getId());
             communeDto.setCommuneName(property.getCommune().getName());
             locationDto.setCommune(communeDto);
         }
-        
+
         if (property.getVillage() != null) {
             VillageSummaryDto villageDto = new VillageSummaryDto();
             villageDto.setId(property.getVillage().getId());
             villageDto.setVillageName(property.getVillage().getName());
             locationDto.setVillage(villageDto);
         }
-        
+
         dto.setLocation(locationDto);
-        
+
         // Measure Info
         if (property.getMeasureInfo() != null) {
             PropertyMeasureInfoSummaryDto measureDto = new PropertyMeasureInfoSummaryDto();
@@ -371,12 +376,12 @@ public class PropertyService {
             // Set measure info fields
             dto.setMeasureInfo(measureDto);
         }
-        
+
         dto.setIsKeepRecordEvaluation(property.getIsKeepRecordEvaluation());
         dto.setRemark(property.getRemark());
         dto.setCreatedAt(property.getCreatedAt());
         dto.setUpdatedAt(property.getUpdatedAt());
-        
+
         return dto;
     }
 }
