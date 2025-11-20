@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
-
+import com.lyhorng.pedssystem.enums.EvaStatus;
+import com.lyhorng.pedssystem.model.customer.Customer;
+import com.lyhorng.pedssystem.model.branchRequest.BranchRequest;
 import com.lyhorng.pedssystem.model.property.location.Commune;
 import com.lyhorng.pedssystem.model.property.location.District;
 import com.lyhorng.pedssystem.model.property.location.Province;
@@ -21,80 +23,111 @@ public class Property {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    // Row 1: Requester - Link to Request from Branch
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "branch_request_id")
-    private Integer branchRequestId;
+    private BranchRequest branchRequest;
 
-    @Column(name = "old_property_id", length = 50)
-    private String oldPropertyId;
+    // Row 2: Status of Evaluation (New/Renew)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "eva_status")
+    private EvaStatus evaStatus;
 
-    @Column(name = "property_code", length = 50, unique = true)
-    private String propertyCode;
+    // Row 3: Existing Application code (only for Renew)
+    @Column(name = "exist_application_code", length = 50)
+    private String existApplicationCode;
 
-    @Column(name = "property_version", length = 20)
-    private String propertyVersion;
+    // Row 4: Application Code - Auto generate by system as unique code (11 digits)
+    @Column(name = "application_code", unique = true, length = 11)
+    private String applicationCode;
 
-    @Column(name = "is_owner")
-    private Boolean isOwner = false;
+    // Row 5: Evaluation Cycle (Default 1)
+    @Column(name = "eva_cycle")
+    private Integer evaCycle = 1;
 
+    // Row 6: Ownership Title (Yes/No)
+    @Column(name = "is_ownership_title")
+    private Boolean isOwnershipTitle = false;
+
+    // Row 7: Owner - Link to customer
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "owner_id")
+    private Customer owner;
+
+    // Row 8: Co-Owner - Link to customer
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "co_owner_id")
+    private Customer coOwner;
+
+    // Row 9: Type of Title
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "property_title_type_id")
+    private PropertyTitleType propertyTitleType;
+
+    // Row 10: Title Number (Free text)
     @Column(name = "title_number", length = 100)
     private String titleNumber;
 
-    @Column(name = "remark", columnDefinition = "TEXT")
-    private String remark;
-
-    // ================== RELATIONSHIPS ==================
+    // Row 11: Category Property
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "property_title_type_id")
-    private PropertyTittleType propertyTitleType;
+    @JoinColumn(name = "category_id")
+    private Category category;
 
+    // Row 12: Property Specifics
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "property_info_id")
-    private PropertyMeasureInfo propertyInfo;
+    @JoinColumn(name = "property_specific_id")
+    private PropertySpecific propertySpecific;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "measure_info_id")
-    private PropertyMeasureInfo measureInfo;
-
-    // ================== LOCATION RELATIONSHIPS ==================
+    // ================== LOCATION (Rows 13-16) ==================
+    
+    // Row 13: Province
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "province_id")
     private Province province;
 
+    // Row 14: City/District
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "district_id")
     private District district;
 
+    // Row 15: Commune
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "commune_id")
     private Commune commune;
 
+    // Row 16: Village
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "village_id")
     private Village village;
 
-    @Column(name = "map_data")
-    private String mapData;
+    // Row 17: Information about measure
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "measure_info_id")
+    private PropertyMeasureInfo measureInfo;
 
-    @Column(name = "color")
-    private String color;
+    // Row 18: Keep record Evaluation (Activate/Deactivate, Default Activate)
+    @Column(name = "is_keep_record_evaluation")
+    private Boolean isKeepRecordEvaluation = true;
 
-    @Column(name = "latitude")
-    private Double latitude;
-
-    @Column(name = "longitude")
-    private Double longitude;
-
-    @Column(name = "attachment")
-    private String attachment;
+    // Row 19: Remark (Free text)
+    @Column(name = "remark", columnDefinition = "TEXT")
+    private String remark;
 
     // ================== AUDIT FIELDS ==================
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 
-    @Column(name = "file_path")
-    private String filePath;
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PropertyTittleType {
+public class PropertyTitleType {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
