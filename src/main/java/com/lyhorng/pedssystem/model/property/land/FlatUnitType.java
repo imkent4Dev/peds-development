@@ -10,19 +10,20 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
 @Entity
-@Table(name = "land_shape")
+@Table(name = "flat_unit_type")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LandShape {
+public class FlatUnitType {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "shape_name", unique = true, nullable = false)
-    private String shapeName;
+    @Column(name = "unit_type_name", unique = true, nullable = false)
+    private String unitTypeName;
     
-    // Values: Rectangle, Square, L-Shape, Regular Shape, Irregular Shape, Other
+    // Values: Lot, Blank
 }

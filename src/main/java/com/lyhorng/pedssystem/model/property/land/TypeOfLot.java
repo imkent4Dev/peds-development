@@ -11,18 +11,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "land_shape")
+@Table(name = "type_of_lot")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LandShape {
+public class TypeOfLot {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "shape_name", unique = true, nullable = false)
-    private String shapeName;
+    @Column(name = "lot_type_name", unique = true, nullable = false)
+    private String lotTypeName;
     
-    // Values: Rectangle, Square, L-Shape, Regular Shape, Irregular Shape, Other
+    // Values: Corner Lot, Reverse corner lot, Interior Lot, Flag Lot, Through Lot
 }

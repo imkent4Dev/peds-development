@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import com.lyhorng.pedssystem.enums.EvaStatus;
 import com.lyhorng.pedssystem.model.customer.Customer;
 import com.lyhorng.pedssystem.model.branchRequest.BranchRequest;
+import com.lyhorng.pedssystem.model.property.land.Land;
 import com.lyhorng.pedssystem.model.property.location.Commune;
 import com.lyhorng.pedssystem.model.property.location.District;
 import com.lyhorng.pedssystem.model.property.location.Province;
@@ -79,7 +80,7 @@ public class Property {
     private PropertySpecific propertySpecific;
 
     // ================== LOCATION (Rows 13-16) ==================
-    
+
     // Row 13: Province
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "province_id")
@@ -112,6 +113,10 @@ public class Property {
     // Row 19: Remark (Free text)
     @Column(name = "remark", columnDefinition = "TEXT")
     private String remark;
+
+    // ================== LAND RELATIONSHIP (1-to-1) ==================
+    @OneToOne(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Land land;
 
     // ================== AUDIT FIELDS ==================
     @Column(name = "created_at", updatable = false)
