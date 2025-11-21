@@ -23,12 +23,6 @@ import java.util.Map;
 public class PropertyController {
 
     private final PropertyService propertyService;
-
-    // ==================== CREATE PROPERTY ====================
-    /**
-     * Create a new property
-     * POST /api/v1/properties
-     */
     @PostMapping
     public ResponseEntity<Map<String, Object>> createProperty(@Valid @RequestBody PropertyRequestDto requestDto) {
         log.info("REST request to create property");

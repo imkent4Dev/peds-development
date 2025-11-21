@@ -2,6 +2,8 @@ package com.lyhorng.pedssystem.dto.property;
 
 import java.time.LocalDateTime;
 
+import com.lyhorng.pedssystem.dto.property.building.BuildingTotalsDto;
+import com.lyhorng.pedssystem.dto.property.building.BuildingsBySourceDto;
 import com.lyhorng.pedssystem.enums.EvaStatus;
 
 import lombok.AllArgsConstructor;
@@ -32,10 +34,15 @@ public class PropertyResponseDto {
 
     private LocationDto location;
     private PropertyMeasureInfoSummaryDto measureInfo;
-
     private Boolean isKeepRecordEvaluation;
     private String remark;
+
     private LandResponseDto land;
+
+    private BuildingsBySourceDto buildingsBySource;
+    private BuildingTotalsDto buildingTotals;
+
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
