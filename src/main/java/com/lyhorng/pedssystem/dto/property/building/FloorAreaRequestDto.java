@@ -13,6 +13,9 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class FloorAreaRequestDto {
     
+    // Optional ID for updates (null for new floor areas)
+    private Long id;
+    
     @NotNull(message = "Floor type is required")
     private FloorAreaType floorType;
     

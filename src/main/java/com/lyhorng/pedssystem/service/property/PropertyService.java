@@ -240,6 +240,9 @@ public class PropertyService {
             property.setLand(land);
         }
 
+        // Update Buildings
+        updateBuildingsFromDto(requestDto.getBuildings(), property);
+
         Property updatedProperty = propertyRepository.save(property);
         log.info("Property updated successfully with id: {}", id);
 
@@ -589,6 +592,131 @@ public class PropertyService {
     }
 
     // ==================== BUILDING HELPER METHODS ====================
+    private void updateBuildingsFromDto(List<BuildingRequestDto> buildingDtos, Property property) {
+        if (buildingDtos == null) {
+            buildingDtos = new ArrayList<>();
+        }
+        
+        // Get existing buildings
+        List<Building> existingBuildings = new ArrayList<>(property.getBuildings());
+        
+        // Track which buildings from the request exist
+        List<Long> processedBuildingIds = new ArrayList<>();
+        
+        // Update or create buildings from DTO
+        for (BuildingRequestDto buildingDto : buildingDtos) {
+            if (buildingDto.getId() != null) {
+                // Update existing building
+                Building existingBuilding = existingBuildings.stream()
+                    .filter(b -> b.getId().equals(buildingDto.getId()))
+                    .findFirst()
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                        "Building not found with id: " + buildingDto.getId()));
+                
+                updateBuildingFromDto(buildingDto, existingBuilding);
+                processedBuildingIds.add(buildingDto.getId());
+            } else {
+                // Create new building
+                Building newBuilding = createBuildingFromDto(buildingDto, property);
+                property.getBuildings().add(newBuilding);
+            }
+        }
+        
+        // Remove buildings that are no longer in the request
+        existingBuildings.stream()
+            .filter(b -> b.getId() != null && !processedBuildingIds.contains(b.getId()))
+            .forEach(buildingToRemove -> {
+                property.getBuildings().remove(buildingToRemove);
+                buildingRepository.delete(buildingToRemove);
+            });
+    }
+    
+    private void updateBuildingFromDto(BuildingRequestDto buildingDto, Building building) {
+        building.setSourceType(buildingDto.getSourceType());
+        building.setBuildingEvaluation(buildingDto.getBuildingEvaluation());
+        
+        // Update building type
+        building.setBuildingType(buildingTypeRepository.findById(buildingDto.getBuildingTypeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Building type not found")));
+        
+        building.setBuildingUsage(buildingDto.getBuildingUsage());
+        building.setBuildingStructure(buildingDto.getBuildingStructure());
+        building.setBuildingStories(buildingDto.getBuildingStories());
+        building.setBuildingSizeUnit(buildingDto.getBuildingSizeUnit());
+        building.setBuildingYearBuilt(buildingDto.getBuildingYearBuilt());
+        building.setRemark(buildingDto.getRemark());
+        
+        // Update floor areas
+        updateFloorAreasFromDto(buildingDto.getFloorAreas(), building);
+        
+        // Recalculate totals
+        building.calculateTotals();
+        
+        buildingRepository.save(building);
+    }
+    
+    private void updateFloorAreasFromDto(List<FloorAreaRequestDto> floorDtos, Building building) {
+        if (floorDtos == null) {
+            floorDtos = new ArrayList<>();
+        }
+        
+        // Get existing floor areas
+        List<FloorArea> existingFloorAreas = new ArrayList<>(building.getFloorAreas());
+        
+        // Track which floor areas from the request exist
+        List<Long> processedFloorAreaIds = new ArrayList<>();
+        
+        // Update or create floor areas from DTO
+        for (FloorAreaRequestDto floorDto : floorDtos) {
+            if (floorDto.getId() != null) {
+                // Update existing floor area
+                FloorArea existingFloorArea = existingFloorAreas.stream()
+                    .filter(fa -> fa.getId().equals(floorDto.getId()))
+                    .findFirst()
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                        "Floor area not found with id: " + floorDto.getId()));
+                
+                updateFloorAreaFromDto(floorDto, existingFloorArea);
+                processedFloorAreaIds.add(floorDto.getId());
+            } else {
+                // Create new floor area
+                FloorArea newFloorArea = createFloorAreaFromDto(floorDto, building);
+                building.addFloorArea(newFloorArea);
+            }
+        }
+        
+        // Remove floor areas that are no longer in the request
+        existingFloorAreas.stream()
+            .filter(fa -> fa.getId() != null && !processedFloorAreaIds.contains(fa.getId()))
+            .forEach(floorAreaToRemove -> {
+                building.removeFloorArea(floorAreaToRemove);
+                floorAreaRepository.delete(floorAreaToRemove);
+            });
+    }
+    
+    private void updateFloorAreaFromDto(FloorAreaRequestDto floorDto, FloorArea floorArea) {
+        floorArea.setFloorType(floorDto.getFloorType());
+        
+        // Update floor description
+        FloorDescription floorDescription = floorDescriptionRepository.findById(floorDto.getFloorDescriptionId())
+                .orElseThrow(() -> new ResourceNotFoundException("Floor description not found"));
+        
+        // Validate that floor description type matches floor type
+        if (floorDescription.getFloorType() != floorDto.getFloorType()) {
+            throw new IllegalArgumentException(
+                String.format("Floor description type %s does not match floor type %s", 
+                    floorDescription.getFloorType(), floorDto.getFloorType())
+            );
+        }
+        
+        floorArea.setFloorDescription(floorDescription);
+        floorArea.setSize(floorDto.getSize());
+        floorArea.setLength(floorDto.getLength());
+        floorArea.setDisplayOrder(floorDto.getDisplayOrder());
+        
+        floorAreaRepository.save(floorArea);
+    }
+    
     private Building createBuildingFromDto(BuildingRequestDto buildingDto, Property property) {
         Building building = new Building();
         building.setProperty(property);

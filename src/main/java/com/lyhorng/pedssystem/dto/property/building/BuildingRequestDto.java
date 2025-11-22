@@ -15,6 +15,9 @@ import java.util.ArrayList;
 @AllArgsConstructor
 public class BuildingRequestDto {
     
+    // Optional ID for updates (null for new buildings)
+    private Long id;
+    
     @NotNull(message = "Source type is required")
     private BuildingSourceType sourceType;
     
