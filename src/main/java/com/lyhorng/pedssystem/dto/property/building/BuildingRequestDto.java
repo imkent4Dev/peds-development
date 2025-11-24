@@ -15,8 +15,8 @@ import java.util.ArrayList;
 @AllArgsConstructor
 public class BuildingRequestDto {
     
-    @NotNull(message = "Source type is required")
-    private BuildingSourceType sourceType;
+    private Long sourceTypeId;  // Change from enum to ID
+    private Long agencyId; 
     
     private BuildingEvaluation buildingEvaluation;
     

@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.lyhorng.pedssystem.enums.BuildingEvaluation;
-import com.lyhorng.pedssystem.enums.BuildingSourceType;
 import com.lyhorng.pedssystem.enums.BuildingUsage;
 
 import lombok.AllArgsConstructor;
@@ -19,7 +18,8 @@ import lombok.NoArgsConstructor;
 public class BuildingResponseDto {
     
     private Long id;
-    private BuildingSourceType sourceType;
+    private SourceTypeSummaryDto sourceType;  // Change from enum to DTO
+    private AgencySummaryDto agency;  
     private BuildingEvaluation buildingEvaluation;
     private BuildingTypeDto buildingType;
     private BuildingUsage buildingUsage;

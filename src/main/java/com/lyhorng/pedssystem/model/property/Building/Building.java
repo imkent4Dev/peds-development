@@ -1,7 +1,6 @@
 package com.lyhorng.pedssystem.model.property.building;
 
-import com.lyhorng.pedssystem.enums.BuildingEvaluation;
-import com.lyhorng.pedssystem.enums.BuildingSourceType;
+import com.lyhorng.pedssystem.model.agency.Agency;
 import com.lyhorng.pedssystem.model.property.Property;
 
 import jakarta.persistence.*;
@@ -25,15 +24,19 @@ public class Building {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    // Many-to-One relationship with Property
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "property_id", nullable = false)
     private Property property;
     
-    // Which source entered this building: BRANCH, SME, MEGA, AGENCY
-    @Enumerated(EnumType.STRING)
-    @Column(name = "source_type", nullable = false)
+    // Replace enum with entity relationship
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "source_type_id", nullable = false)
     private BuildingSourceType sourceType;
+    
+    // Add agency relationship (only populated if sourceType is AGENCY)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "agency_id")
+    private Agency agency;
     
     // Building Evaluation (Yes/No/Remark)
     @Enumerated(EnumType.STRING)
@@ -51,8 +54,8 @@ public class Building {
     private BuildingUsage buildingUsage;
     
     // Building Structure (I.P.S, semi-metal)
-    @Column(name = "building_structure", length = 100)
-    private String buildingStructure;
+    // @Column(name = "building_structure", length = 100)
+    // private String buildingStructure;
     
     // Building Stories (total input)
     @Column(name = "building_stories")

@@ -1,6 +1,7 @@
 package com.lyhorng.pedssystem.service.property;
 
 import com.lyhorng.pedssystem.dto.property.*;
+import com.lyhorng.pedssystem.dto.property.building.AgencySummaryDto;
 import com.lyhorng.pedssystem.dto.property.building.BuildingRequestDto;
 import com.lyhorng.pedssystem.dto.property.building.BuildingResponseDto;
 import com.lyhorng.pedssystem.dto.property.building.BuildingSummaryDto;
@@ -10,14 +11,17 @@ import com.lyhorng.pedssystem.dto.property.building.BuildingsBySourceDto;
 import com.lyhorng.pedssystem.dto.property.building.FloorAreaRequestDto;
 import com.lyhorng.pedssystem.dto.property.building.FloorAreaResponseDto;
 import com.lyhorng.pedssystem.dto.property.building.FloorDescriptionDto;
+import com.lyhorng.pedssystem.dto.property.building.SourceTypeSummaryDto;
 import com.lyhorng.pedssystem.enums.EvaStatus;
 import com.lyhorng.pedssystem.enums.FloorAreaType;
 import com.lyhorng.pedssystem.exception.ResourceNotFoundException;
 import com.lyhorng.pedssystem.model.property.Property;
 import com.lyhorng.pedssystem.model.property.building.Building;
+import com.lyhorng.pedssystem.model.property.building.BuildingSourceType;
 import com.lyhorng.pedssystem.model.property.building.FloorArea;
 import com.lyhorng.pedssystem.model.property.building.FloorDescription;
 import com.lyhorng.pedssystem.model.property.land.Land;
+import com.lyhorng.pedssystem.model.agency.Agency;
 import com.lyhorng.pedssystem.model.branchRequest.BranchRequest;
 import com.lyhorng.pedssystem.model.customer.Customer;
 import com.lyhorng.pedssystem.repository.property.*;
@@ -25,6 +29,7 @@ import com.lyhorng.pedssystem.repository.property.building.BuildingRepository;
 import com.lyhorng.pedssystem.repository.property.building.BuildingTypeRepository;
 import com.lyhorng.pedssystem.repository.property.building.FloorAreaRepository;
 import com.lyhorng.pedssystem.repository.property.building.FloorDescriptionRepository;
+import com.lyhorng.pedssystem.repository.property.building.SourceTypeRepository;
 import com.lyhorng.pedssystem.repository.property.land.FlatUnitTypeRepository;
 import com.lyhorng.pedssystem.repository.property.land.LandRepository;
 import com.lyhorng.pedssystem.repository.property.land.LandShapeRepository;
@@ -34,10 +39,12 @@ import com.lyhorng.pedssystem.repository.property.location.DistrictRepository;
 import com.lyhorng.pedssystem.repository.property.location.ProvinceRepository;
 import com.lyhorng.pedssystem.repository.property.location.VillageRepository;
 import com.lyhorng.pedssystem.repository.customer.CustomerRepository;
+import com.lyhorng.pedssystem.repository.agency.AgencyRepository;
 import com.lyhorng.pedssystem.repository.branchRequest.BranchRequestRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,10 +75,12 @@ public class PropertyService {
     private final LandShapeRepository landShapeRepository;
     private final TypeOfLotRepository typeOfLotRepository;
     private final FlatUnitTypeRepository flatUnitTypeRepository;
-    private final BuildingRepository buildingRepository;
     private final BuildingTypeRepository buildingTypeRepository;
     private final FloorDescriptionRepository floorDescriptionRepository;
     private final FloorAreaRepository floorAreaRepository;
+    private final SourceTypeRepository sourceTypeRepository;
+    private final AgencyRepository agencyRepository;
+    private final BuildingRepository buildingRepository;
 
     public PropertyResponseDto createProperty(PropertyRequestDto requestDto) {
         log.info("Creating new property with evaluation status: {}", requestDto.getEvaStatus());
@@ -435,50 +444,50 @@ public class PropertyService {
         if (property.getLand() != null) {
             dto.setLand(convertLandToResponseDto(property.getLand()));
         }
+
         // Buildings (1-to-Many) grouped by source type
         if (property.getBuildings() != null && !property.getBuildings().isEmpty()) {
             BuildingsBySourceDto buildingsBySource = new BuildingsBySourceDto();
             BuildingTotalsDto totals = new BuildingTotalsDto();
-            
+
             totals.setTotalBuildings(property.getBuildings().size());
             BigDecimal grandTotalMFA = BigDecimal.ZERO;
             BigDecimal grandTotalAFA = BigDecimal.ZERO;
-            
+
             for (Building building : property.getBuildings()) {
                 BuildingResponseDto buildingDto = convertBuildingToResponseDto(building);
-                
-                // Add to appropriate source list
-                switch (building.getSourceType()) {
-                    case BRANCH:
+
+                // Get source type name and group accordingly
+                if (building.getSourceType() != null) {
+                    String sourceTypeName = building.getSourceType().getName();
+
+                    // Use if-else instead of switch for entity comparison
+                    if ("BRANCH".equals(sourceTypeName)) {
                         buildingsBySource.getBranch().add(buildingDto);
-                        break;
-                    case SME:
+                    } else if ("SME".equals(sourceTypeName)) {
                         buildingsBySource.getSme().add(buildingDto);
-                        break;
-                    case MEGA:
+                    } else if ("MEGA".equals(sourceTypeName)) {
                         buildingsBySource.getMega().add(buildingDto);
-                        break;
-                    case AGENCY_CPL:
-                    case AGENCY_LUCKY:
-                    case AGENCY_KEY:
-                    case AGENCY_VTRUST:
-                    case AGENCY_KNIGHT_FRANK:
+                    } else if ("AGENCY".equals(sourceTypeName)) {
                         buildingsBySource.getAgency().add(buildingDto);
-                        break;
+                    }
                 }
-                
+
                 // Accumulate totals
-                grandTotalMFA = grandTotalMFA.add(building.getTotalMFA() != null ? building.getTotalMFA() : BigDecimal.ZERO);
-                grandTotalAFA = grandTotalAFA.add(building.getTotalAFA() != null ? building.getTotalAFA() : BigDecimal.ZERO);
+                grandTotalMFA = grandTotalMFA
+                        .add(building.getTotalMFA() != null ? building.getTotalMFA() : BigDecimal.ZERO);
+                grandTotalAFA = grandTotalAFA
+                        .add(building.getTotalAFA() != null ? building.getTotalAFA() : BigDecimal.ZERO);
             }
-            
+
             totals.setTotalMFA(grandTotalMFA);
             totals.setTotalAFA(grandTotalAFA);
             totals.setGrandTotal(grandTotalMFA.add(grandTotalAFA));
-            
+
             dto.setBuildingsBySource(buildingsBySource);
             dto.setBuildingTotals(totals);
         }
+
         dto.setCreatedAt(property.getCreatedAt());
         dto.setUpdatedAt(property.getUpdatedAt());
 
@@ -592,66 +601,105 @@ public class PropertyService {
     private Building createBuildingFromDto(BuildingRequestDto buildingDto, Property property) {
         Building building = new Building();
         building.setProperty(property);
-        building.setSourceType(buildingDto.getSourceType());
+
+        // Set source type
+        BuildingSourceType sourceType = sourceTypeRepository
+                .findById(buildingDto.getSourceTypeId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Source type not found with id: " + buildingDto.getSourceTypeId()));
+        building.setSourceType(sourceType);
+
+        // Set agency if provided (only for AGENCY source type)
+        if (buildingDto.getAgencyId() != null) {
+            if (!"AGENCY".equals(sourceType.getName())) {
+                throw new IllegalArgumentException("Agency can only be set when source type is AGENCY");
+            }
+
+            Agency agency = agencyRepository.findById(buildingDto.getAgencyId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Agency not found with id: " + buildingDto.getAgencyId()));
+            building.setAgency(agency);
+        } else if ("AGENCY".equals(sourceType.getName())) {
+            throw new IllegalArgumentException("Agency is required when source type is AGENCY");
+        }
+
         building.setBuildingEvaluation(buildingDto.getBuildingEvaluation());
-        
+
         // Set building type
         building.setBuildingType(buildingTypeRepository.findById(buildingDto.getBuildingTypeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Building type not found")));
-        
+
         building.setBuildingUsage(buildingDto.getBuildingUsage());
-        building.setBuildingStructure(buildingDto.getBuildingStructure());
         building.setBuildingStories(buildingDto.getBuildingStories());
         building.setBuildingSizeUnit(buildingDto.getBuildingSizeUnit());
         building.setBuildingYearBuilt(buildingDto.getBuildingYearBuilt());
         building.setRemark(buildingDto.getRemark());
-        
+
         // Save building first to get ID
         Building savedBuilding = buildingRepository.save(building);
-        
-        // Create floor areas
-        for (FloorAreaRequestDto floorDto : buildingDto.getFloorAreas()) {
-            FloorArea floorArea = createFloorAreaFromDto(floorDto, savedBuilding);
-            savedBuilding.addFloorArea(floorArea);
+
+        // Create floor areas (with null check)
+        if (buildingDto.getFloorAreas() != null && !buildingDto.getFloorAreas().isEmpty()) {
+            for (FloorAreaRequestDto floorDto : buildingDto.getFloorAreas()) {
+                FloorArea floorArea = createFloorAreaFromDto(floorDto, savedBuilding);
+                savedBuilding.addFloorArea(floorArea);
+            }
         }
-        
+
         // Calculate totals
         savedBuilding.calculateTotals();
-        
+
         return buildingRepository.save(savedBuilding);
     }
-    
+
     private FloorArea createFloorAreaFromDto(FloorAreaRequestDto floorDto, Building building) {
         FloorArea floorArea = new FloorArea();
         floorArea.setBuilding(building);
         floorArea.setFloorType(floorDto.getFloorType());
-        
+
         // Set floor description
         FloorDescription floorDescription = floorDescriptionRepository.findById(floorDto.getFloorDescriptionId())
                 .orElseThrow(() -> new ResourceNotFoundException("Floor description not found"));
-        
+
         // Validate that floor description type matches floor type
         if (floorDescription.getFloorType() != floorDto.getFloorType()) {
             throw new IllegalArgumentException(
-                String.format("Floor description type %s does not match floor type %s", 
-                    floorDescription.getFloorType(), floorDto.getFloorType())
-            );
+                    String.format("Floor description type %s does not match floor type %s",
+                            floorDescription.getFloorType(), floorDto.getFloorType()));
         }
-        
+
         floorArea.setFloorDescription(floorDescription);
         floorArea.setSize(floorDto.getSize());
         floorArea.setLength(floorDto.getLength());
         floorArea.setDisplayOrder(floorDto.getDisplayOrder());
-        
+
         return floorAreaRepository.save(floorArea);
     }
-    
+
     private BuildingResponseDto convertBuildingToResponseDto(Building building) {
         BuildingResponseDto dto = new BuildingResponseDto();
         dto.setId(building.getId());
-        dto.setSourceType(building.getSourceType());
+
+        // Source type
+        if (building.getSourceType() != null) {
+            SourceTypeSummaryDto sourceTypeDto = new SourceTypeSummaryDto();
+            sourceTypeDto.setId(building.getSourceType().getId());
+            sourceTypeDto.setName(building.getSourceType().getName());
+            sourceTypeDto.setDisplayName(building.getSourceType().getDisplayName());
+            dto.setSourceType(sourceTypeDto);
+        }
+
+        // Agency (if applicable)
+        if (building.getAgency() != null) {
+            AgencySummaryDto agencyDto = new AgencySummaryDto();
+            agencyDto.setId(building.getAgency().getId());
+            agencyDto.setName(building.getAgency().getName());
+            agencyDto.setDisplayName(building.getAgency().getDisplayName());
+            dto.setAgency(agencyDto);
+        }
+
         dto.setBuildingEvaluation(building.getBuildingEvaluation());
-        
+
         // Building type
         if (building.getBuildingType() != null) {
             BuildingTypeDto typeDto = new BuildingTypeDto();
@@ -659,22 +707,21 @@ public class PropertyService {
             typeDto.setTypeName(building.getBuildingType().getTypeName());
             dto.setBuildingType(typeDto);
         }
-        
+
         dto.setBuildingUsage(building.getBuildingUsage());
-        dto.setBuildingStructure(building.getBuildingStructure());
         dto.setBuildingStories(building.getBuildingStories());
         dto.setBuildingSizeUnit(building.getBuildingSizeUnit());
         dto.setBuildingYearBuilt(building.getBuildingYearBuilt());
         dto.setRemark(building.getRemark());
-        
+
         // Separate floor areas by type
         List<FloorAreaResponseDto> mainFloors = new ArrayList<>();
         List<FloorAreaResponseDto> ancillaryFloors = new ArrayList<>();
-        
+
         if (building.getFloorAreas() != null) {
             for (FloorArea floorArea : building.getFloorAreas()) {
                 FloorAreaResponseDto floorDto = convertFloorAreaToResponseDto(floorArea);
-                
+
                 if (floorArea.getFloorType() == FloorAreaType.MAIN) {
                     mainFloors.add(floorDto);
                 } else {
@@ -682,10 +729,10 @@ public class PropertyService {
                 }
             }
         }
-        
+
         dto.setMainFloorAreas(mainFloors);
         dto.setAncillaryFloorAreas(ancillaryFloors);
-        
+
         // Summary
         BuildingSummaryDto summary = new BuildingSummaryDto();
         summary.setTotalMFA(building.getTotalMFA());
@@ -693,18 +740,18 @@ public class PropertyService {
         summary.setAccommodationUnit(building.getAccommodationUnit());
         summary.setTotalApproximately(building.getTotalApproximately());
         dto.setSummary(summary);
-        
+
         dto.setCreatedAt(building.getCreatedAt());
         dto.setUpdatedAt(building.getUpdatedAt());
-        
+
         return dto;
     }
-    
+
     private FloorAreaResponseDto convertFloorAreaToResponseDto(FloorArea floorArea) {
         FloorAreaResponseDto dto = new FloorAreaResponseDto();
         dto.setId(floorArea.getId());
         dto.setFloorType(floorArea.getFloorType());
-        
+
         // Floor description
         if (floorArea.getFloorDescription() != null) {
             FloorDescriptionDto descDto = new FloorDescriptionDto();
@@ -713,14 +760,14 @@ public class PropertyService {
             descDto.setFloorType(floorArea.getFloorDescription().getFloorType());
             dto.setFloorDescription(descDto);
         }
-        
+
         dto.setSize(floorArea.getSize());
         dto.setLength(floorArea.getLength());
         dto.setStructure(floorArea.getStructure());
         dto.setDisplayOrder(floorArea.getDisplayOrder());
         dto.setCreatedAt(floorArea.getCreatedAt());
         dto.setUpdatedAt(floorArea.getUpdatedAt());
-        
+
         return dto;
     }
 }
