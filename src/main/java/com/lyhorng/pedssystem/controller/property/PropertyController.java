@@ -1,12 +1,10 @@
 package com.lyhorng.pedssystem.controller.property;
 
-import com.lyhorng.common.response.ApiResponse;
 import com.lyhorng.pedssystem.dto.property.PropertyRequestDto;
 import com.lyhorng.pedssystem.dto.property.PropertyResponseDto;
 import com.lyhorng.pedssystem.enums.EvaStatus;
-import com.lyhorng.pedssystem.model.agency.Agency;
-import com.lyhorng.pedssystem.model.property.Property;
 import com.lyhorng.pedssystem.service.property.PropertyService;
+import com.lyhorng.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,37 +26,20 @@ public class PropertyController {
     private final PropertyService propertyService;
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createProperty(@Valid @RequestBody PropertyRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<PropertyResponseDto>> createProperty(@Valid @RequestBody PropertyRequestDto requestDto) {
         log.info("REST request to create property");
-        
+
         try {
             PropertyResponseDto createdProperty = propertyService.createProperty(requestDto);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Property created successfully");
-            response.put("data", createdProperty);
-            
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-            
+            return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Property created successfully", createdProperty));
         } catch (Exception e) {
             log.error("Error creating property: {}", e.getMessage());
-            
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "Failed to create property: " + e.getMessage());
-            
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error("Failed to create property: " + e.getMessage()));
         }
     }
 
-    // ==================== UPDATE PROPERTY ====================
-    /**
-     * Update an existing property
-     * PUT /api/v1/properties/{id}
-     */
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> updateProperty(
+    public ResponseEntity<ApiResponse<PropertyResponseDto>> updateProperty(
             @PathVariable Long id,
             @Valid @RequestBody PropertyRequestDto requestDto) {
         
@@ -66,219 +47,98 @@ public class PropertyController {
         
         try {
             PropertyResponseDto updatedProperty = propertyService.updateProperty(id, requestDto);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Property updated successfully");
-            response.put("data", updatedProperty);
-            
-            return ResponseEntity.ok(response);
-            
+            return ResponseEntity.ok(ApiResponse.success("Property updated successfully", updatedProperty));
         } catch (Exception e) {
             log.error("Error updating property: {}", e.getMessage());
-            
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "Failed to update property: " + e.getMessage());
-            
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error("Failed to update property: " + e.getMessage()));
         }
     }
 
-    // ==================== GET PROPERTY BY ID ====================
-    /**
-     * Get property by ID
-     * GET /api/v1/properties/{id}
-     */
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getPropertyById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<PropertyResponseDto>> getPropertyById(@PathVariable Long id) {
         log.info("REST request to get property with id: {}", id);
-        
+
         try {
             PropertyResponseDto property = propertyService.getPropertyById(id);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Property retrieved successfully");
-            response.put("data", property);
-            
-            return ResponseEntity.ok(response);
-            
+            return ResponseEntity.ok(ApiResponse.success("Property retrieved successfully", property));
         } catch (Exception e) {
             log.error("Error retrieving property: {}", e.getMessage());
-            
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "Failed to retrieve property: " + e.getMessage());
-            
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Failed to retrieve property: " + e.getMessage()));
         }
     }
 
-    // ==================== GET ALL PROPERTIES ====================
-    /**
-     * Get all properties
-     * GET /api/v1/properties
-     */
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getAllProperties() {
+    public ResponseEntity<ApiResponse<List<PropertyResponseDto>>> getAllProperties() {
         log.info("REST request to get all properties");
-        
+
         try {
             List<PropertyResponseDto> properties = propertyService.getAllProperties();
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Properties retrieved successfully");
-            response.put("data", properties);
-            response.put("count", properties.size());
-            
-            return ResponseEntity.ok(response);
-            
+            return ResponseEntity.ok(ApiResponse.success("Properties retrieved successfully", properties));
         } catch (Exception e) {
             log.error("Error retrieving properties: {}", e.getMessage());
-            
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "Failed to retrieve properties: " + e.getMessage());
-            
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error("Failed to retrieve properties: " + e.getMessage()));
         }
     }
 
-    // ==================== DELETE PROPERTY ====================
-    /**
-     * Delete property by ID
-     * DELETE /api/v1/properties/{id}
-     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> deleteProperty(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteProperty(@PathVariable Long id) {
         log.info("REST request to delete property with id: {}", id);
-        
+
         try {
             propertyService.deleteProperty(id);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Property deleted successfully");
-            
-            return ResponseEntity.ok(response);
-            
+            return ResponseEntity.ok(ApiResponse.success("Property deleted successfully", null));
         } catch (Exception e) {
             log.error("Error deleting property: {}", e.getMessage());
-            
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "Failed to delete property: " + e.getMessage());
-            
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Failed to delete property: " + e.getMessage()));
         }
     }
 
-    // ==================== GET PROPERTY BY APPLICATION CODE ====================
-    /**
-     * Get property by application code
-     * GET /api/v1/properties/application-code/{code}
-     */
     @GetMapping("/application-code/{code}")
-    public ResponseEntity<Map<String, Object>> getPropertyByApplicationCode(@PathVariable String code) {
+    public ResponseEntity<ApiResponse<PropertyResponseDto>> getPropertyByApplicationCode(@PathVariable String code) {
         log.info("REST request to get property with application code: {}", code);
-        
+
         try {
             PropertyResponseDto property = propertyService.getPropertyByApplicationCode(code);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Property retrieved successfully");
-            response.put("data", property);
-            
-            return ResponseEntity.ok(response);
-            
+            return ResponseEntity.ok(ApiResponse.success("Property retrieved successfully", property));
         } catch (Exception e) {
             log.error("Error retrieving property: {}", e.getMessage());
-            
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "Failed to retrieve property: " + e.getMessage());
-            
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Failed to retrieve property: " + e.getMessage()));
         }
     }
 
-    // ==================== GET PROPERTIES BY EVALUATION STATUS ====================
-    /**
-     * Get properties by evaluation status
-     * GET /api/v1/properties/status/{status}
-     */
     @GetMapping("/status/{status}")
-    public ResponseEntity<Map<String, Object>> getPropertiesByEvaStatus(@PathVariable EvaStatus status) {
+    public ResponseEntity<ApiResponse<List<PropertyResponseDto>>> getPropertiesByEvaStatus(@PathVariable EvaStatus status) {
         log.info("REST request to get properties with status: {}", status);
-        
+
         try {
             List<PropertyResponseDto> properties = propertyService.getPropertiesByEvaStatus(status);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Properties retrieved successfully");
-            response.put("data", properties);
-            response.put("count", properties.size());
-            
-            return ResponseEntity.ok(response);
-            
+            return ResponseEntity.ok(ApiResponse.success("Properties retrieved successfully", properties));
         } catch (Exception e) {
             log.error("Error retrieving properties: {}", e.getMessage());
-            
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "Failed to retrieve properties: " + e.getMessage());
-            
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error("Failed to retrieve properties: " + e.getMessage()));
         }
     }
 
-    // ==================== GET PROPERTIES BY OWNER ====================
-    /**
-     * Get properties by owner ID
-     * GET /api/v1/properties/owner/{ownerId}
-     */
     @GetMapping("/owner/{ownerId}")
-    public ResponseEntity<Map<String, Object>> getPropertiesByOwner(@PathVariable Long ownerId) {
+    public ResponseEntity<ApiResponse<List<PropertyResponseDto>>> getPropertiesByOwner(@PathVariable Long ownerId) {
         log.info("REST request to get properties for owner id: {}", ownerId);
-        
+
         try {
             List<PropertyResponseDto> properties = propertyService.getPropertiesByOwnerId(ownerId);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Properties retrieved successfully");
-            response.put("data", properties);
-            response.put("count", properties.size());
-            
-            return ResponseEntity.ok(response);
-            
+            return ResponseEntity.ok(ApiResponse.success("Properties retrieved successfully", properties));
         } catch (Exception e) {
             log.error("Error retrieving properties: {}", e.getMessage());
-            
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "Failed to retrieve properties: " + e.getMessage());
-            
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error("Failed to retrieve properties: " + e.getMessage()));
         }
     }
 
-    // ==================== HEALTH CHECK ====================
-    /**
-     * Health check endpoint
-     * GET /api/v1/properties/health
-     */
     @GetMapping("/health")
-    public ResponseEntity<Map<String, Object>> healthCheck() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("message", "Property API is running");
-        response.put("timestamp", System.currentTimeMillis());
-        
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<Map<String, Object>>> healthCheck() {
+        Map<String, Object> healthData = new HashMap<>();
+        healthData.put("success", true);
+        healthData.put("message", "Property API is running");
+        healthData.put("timestamp", System.currentTimeMillis());
+
+        return ResponseEntity.ok(ApiResponse.success("Health check successful", healthData));
     }
 }
