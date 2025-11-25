@@ -5,9 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.lyhorng.pedssystem.enums.EvaStatus;
 import com.lyhorng.pedssystem.model.customer.Customer;
 import com.lyhorng.pedssystem.model.branchRequest.BranchRequest;
+import com.lyhorng.pedssystem.model.property.building.Building;
 import com.lyhorng.pedssystem.model.property.land.Land;
 import com.lyhorng.pedssystem.model.property.location.Commune;
 import com.lyhorng.pedssystem.model.property.location.District;
@@ -117,6 +121,10 @@ public class Property {
     // ================== LAND RELATIONSHIP (1-to-1) ==================
     @OneToOne(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
     private Land land;
+    
+    // ================== BUILDING RELATIONSHIP (1-to-Many) ==================
+    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Building> buildings = new ArrayList<>();
 
     // ================== AUDIT FIELDS ==================
     @Column(name = "created_at", updatable = false)

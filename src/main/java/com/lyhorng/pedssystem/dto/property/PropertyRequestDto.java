@@ -1,9 +1,14 @@
 package com.lyhorng.pedssystem.dto.property;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.lyhorng.pedssystem.dto.property.building.BuildingRequestDto;
 import com.lyhorng.pedssystem.enums.EvaStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
 // ==================== REQUEST DTO ====================
@@ -63,4 +68,8 @@ public class PropertyRequestDto {
     // Land information (1-to-1)
     @NotNull(message = "Land information is required")
     private LandRequestDto land;
+
+    // Buildings (1-to-Many) - Optional, can be empty list
+    @Valid
+    private List<BuildingRequestDto> buildings = new ArrayList<>();
 }
