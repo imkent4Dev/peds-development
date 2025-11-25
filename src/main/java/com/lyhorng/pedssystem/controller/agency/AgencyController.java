@@ -21,7 +21,13 @@ public class AgencyController {
     @Autowired
     private AgencyService agencyService;
 
-    @GetMapping("/list")
+    @GetMapping("/list") 
+    public ResponseEntity<ApiResponse<List<Agency>>> listAllAgency() {
+        List<Agency> agencyList = agencyService.getAllAgencies();
+        return ResponseEntity.ok(ApiResponse.success("All Agency fetched successfull", agencyList));
+    }
+
+    @GetMapping("/search")
     public ResponseEntity<ApiResponse<List<Agency>>> getAgenciesBySourceType(@RequestParam String sourceTypeCode) {
         try {
             List<Agency> agencies = agencyService.getAgenciesBySourceType(sourceTypeCode);

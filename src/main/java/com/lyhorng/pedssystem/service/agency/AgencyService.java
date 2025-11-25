@@ -14,6 +14,9 @@ public class AgencyService {
     @Autowired
     private AgencyRepository agencyRepository;
     
+    public List<Agency> getAllAgencies() {
+        return agencyRepository.findAll();
+    }
     public List<Agency> getAgenciesBySourceType(String sourceTypeCode) {
         return agencyRepository.findBySourceTypeCode(sourceTypeCode);
     }

@@ -1,8 +1,11 @@
 package com.lyhorng.pedssystem.controller.property;
 
+import com.lyhorng.common.response.ApiResponse;
 import com.lyhorng.pedssystem.dto.property.PropertyRequestDto;
 import com.lyhorng.pedssystem.dto.property.PropertyResponseDto;
 import com.lyhorng.pedssystem.enums.EvaStatus;
+import com.lyhorng.pedssystem.model.agency.Agency;
+import com.lyhorng.pedssystem.model.property.Property;
 import com.lyhorng.pedssystem.service.property.PropertyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,7 @@ import java.util.Map;
 public class PropertyController {
 
     private final PropertyService propertyService;
+
     @PostMapping
     public ResponseEntity<Map<String, Object>> createProperty(@Valid @RequestBody PropertyRequestDto requestDto) {
         log.info("REST request to create property");

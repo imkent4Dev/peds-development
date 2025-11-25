@@ -23,7 +23,7 @@ public class SourceTypeController {
     @Autowired
     private final SourceTypeService sourceTypeService;
     
-    @GetMapping
+    @GetMapping("/list")
     public ResponseEntity<ApiResponse<List<BuildingSourceType>>> getAllSourceTypes() {
         List<BuildingSourceType> sourceTypesList = sourceTypeService.getAllSourceTypes();
         return ResponseEntity.ok(ApiResponse.success("Source type fetch successfull!", sourceTypesList));
