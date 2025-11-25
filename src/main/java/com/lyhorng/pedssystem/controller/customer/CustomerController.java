@@ -16,21 +16,21 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
-    // Get all customers
     @GetMapping("/list")
     public ResponseEntity<ApiResponse<List<Customer>>> listAll() {
         List<Customer> customerList = customerService.getAllCustomers();
         return ResponseEntity.ok(ApiResponse.success("Customers fetched successfully.", customerList));
     }
 
-    // Create new customer
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<Customer>> create(
             @RequestParam("first_name") String firstName,
             @RequestParam("last_name") String lastName,
+            @RequestParam("full_name") String fullName,
+            @RequestParam("phone_number") String phoneNumber,
             @RequestParam("nid") String nid) {
         try {
-            Customer customer = customerService.createCustomer(firstName, lastName, nid);
+            Customer customer = customerService.createCustomer(firstName, lastName, fullName,phoneNumber ,nid);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.success("Customer created successfully.", customer));
         } catch (Exception e) {
@@ -45,9 +45,11 @@ public class CustomerController {
             @RequestParam("id") Long id,
             @RequestParam("first_name") String firstName,
             @RequestParam("last_name") String lastName,
+            @RequestParam("full_name") String fullName,
+            @RequestParam("phone_number") String phoneNumber,
             @RequestParam("nid") String nid) {
         try {
-            Customer updatedCustomer = customerService.updateCustomer(id, firstName, lastName, nid);
+            Customer updatedCustomer = customerService.updateCustomer(id, firstName, lastName, fullName, phoneNumber, nid);
             return ResponseEntity.ok(ApiResponse.success("Customer updated successfully.", updatedCustomer));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

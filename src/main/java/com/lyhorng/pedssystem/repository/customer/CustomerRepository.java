@@ -10,7 +10,13 @@ import com.lyhorng.pedssystem.model.customer.Customer;
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     Optional<Customer> findById(Long id);
+
     Optional<Customer> findByFirstName(String firstName);
+
     Optional<Customer> findByLastName(String lastName);
-    
-} 
+
+    boolean existsByNid(String nid);
+
+    boolean existsByPhoneNumber(String phoneNumber);
+
+}
