@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.lyhorng.common.response.ApiResponse;
+import com.lyhorng.pedssystem.dto.location.LocationHierarchyDTO;
 import com.lyhorng.pedssystem.model.property.location.Commune;
 import com.lyhorng.pedssystem.model.property.location.District;
 import com.lyhorng.pedssystem.model.property.location.Province;
@@ -26,7 +27,6 @@ public class LocationController {
     @Autowired
     private LocationService locationService;
 
-    // ===================== GET ALL PROVINCES =====================
     @GetMapping("/provinces")
     public ResponseEntity<ApiResponse<List<Province>>> getAllProvinces() {
         try {
@@ -39,7 +39,6 @@ public class LocationController {
         }
     }
 
-    // ===================== GET DISTRICTS BY PROVINCE =====================
     @GetMapping("/districts")
     public ResponseEntity<ApiResponse<List<District>>> getDistricts(
             @RequestParam(required = false) Long provinceId) {
@@ -60,7 +59,6 @@ public class LocationController {
         }
     }
 
-    // ===================== GET COMMUNES BY DISTRICT =====================
     @GetMapping("/communes")
     public ResponseEntity<ApiResponse<List<Commune>>> getCommunes(
             @RequestParam(required = false) Long districtId) {
@@ -81,7 +79,6 @@ public class LocationController {
         }
     }
 
-    // ===================== GET VILLAGES BY COMMUNE =====================
     @GetMapping("/villages")
     public ResponseEntity<ApiResponse<List<Village>>> getVillages(
             @RequestParam(required = false) Long communeId) {
@@ -102,8 +99,6 @@ public class LocationController {
         }
     }
 
-    // ===================== GET COMPLETE HIERARCHY =====================
-    // Optional: Get complete location hierarchy in one call
     @GetMapping("/hierarchy")
     public ResponseEntity<ApiResponse<LocationHierarchyDTO>> getLocationHierarchy(
             @RequestParam(required = false) Long provinceId,
@@ -138,23 +133,4 @@ public class LocationController {
         }
     }
 
-    // Inner DTO class for hierarchy response
-    public static class LocationHierarchyDTO {
-        private List<Province> provinces;
-        private List<District> districts;
-        private List<Commune> communes;
-        private List<Village> villages;
-
-        public List<Province> getProvinces() { return provinces; }
-        public void setProvinces(List<Province> provinces) { this.provinces = provinces; }
-        
-        public List<District> getDistricts() { return districts; }
-        public void setDistricts(List<District> districts) { this.districts = districts; }
-        
-        public List<Commune> getCommunes() { return communes; }
-        public void setCommunes(List<Commune> communes) { this.communes = communes; }
-        
-        public List<Village> getVillages() { return villages; }
-        public void setVillages(List<Village> villages) { this.villages = villages; }
-    }
 }
