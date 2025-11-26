@@ -1,6 +1,7 @@
 package com.lyhorng.pedssystem.controller.agency;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.lyhorng.common.response.ApiResponse;
+import com.lyhorng.common.response.PageResponse;
 import com.lyhorng.pedssystem.model.agency.Agency;
 import com.lyhorng.pedssystem.service.agency.AgencyService;
 
@@ -21,10 +23,20 @@ public class AgencyController {
     @Autowired
     private AgencyService agencyService;
 
-    @GetMapping("/list") 
-    public ResponseEntity<ApiResponse<List<Agency>>> listAllAgency() {
-        List<Agency> agencyList = agencyService.getAllAgencies();
-        return ResponseEntity.ok(ApiResponse.success("All Agency fetched successfull", agencyList));
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<PageResponse<Agency>>> listAllAgency(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<Agency> agencyPage = agencyService.getAllAgencies(page, size);
+
+        PageResponse<Agency> pageResponse = PageResponse.of(
+                agencyPage.getContent(),
+                agencyPage.getNumber() + 1, // Convert to 1-based
+                agencyPage.getSize(),
+                agencyPage.getTotalElements());
+
+        return ResponseEntity.ok(ApiResponse.success("All agencies fetched successfully", pageResponse));
     }
 
     @GetMapping("/search")
