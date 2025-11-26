@@ -1,8 +1,12 @@
 package com.lyhorng.pedssystem.service.customer;
 
-import java.util.List;
 import java.util.Optional;
 
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,8 +32,21 @@ public class CustomerService {
         return customerRepository.save(customer);
     }
 
-    public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
+    public Page<Customer> getAllCustomers(int page, int size, String sortBy, String sortDir, String search) {
+        // Convert 1-based page to 0-based for Spring Data
+        int pageIndex = page > 0 ? page - 1 : 0;
+
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(pageIndex, size, sort);
+
+        if (search != null && !search.trim().isEmpty()) {
+            return customerRepository.searchCustomers(search.trim(), pageable);
+        }
+
+        return customerRepository.findAll(pageable);
     }
 
     public Optional<Customer> getCustomerById(Long id) {
@@ -37,7 +54,8 @@ public class CustomerService {
     }
 
     @Transactional
-    public Customer updateCustomer(Long id, String firstName, String lastName, String fullName, String phoneNumber, String nid) {
+    public Customer updateCustomer(Long id, String firstName, String lastName, String fullName, String phoneNumber,
+            String nid) {
         if (nid != null && !nid.isEmpty()) {
             boolean isNidExist = customerRepository.existsByNid(nid);
             if (isNidExist) {
