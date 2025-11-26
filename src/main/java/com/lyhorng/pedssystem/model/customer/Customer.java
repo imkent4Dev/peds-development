@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Customer {
 
     @Id
@@ -41,14 +41,22 @@ public class Customer {
     @Column(nullable = false, length = 50)
     private String lastName;
 
+    @NotBlank(message = "Full name is required")
+    @Column(nullable = false, length = 100)
+    private String fullName;
+
     @NotBlank(message = "NID is required")
-    @Column(nullable = false, unique = true, length = 50) // Keep the unique constraint for NID
+    @Column(nullable = true, unique = true, length = 50)
     private String nid;
+
+    @NotBlank(message = "Full name is required")
+    @Column(nullable = true, length = 25)
+    private String phoneNumber;
 
     @ManyToOne
     @JoinColumn(name = "relationship_type_id")
     private RelationshipType relationshipType;
-    
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
