@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -144,8 +147,10 @@ public class BranchRequestService {
         return branchRequestRepository.save(branchRequest);
     }
 
-    public List<BranchRequest> getAllBranchRequests() {
-        return branchRequestRepository.findAll();
+    public Page<BranchRequest> getAllBranchRequests(int page, int size) {
+        int pageIndex = Math.max(0, page -1);
+        Pageable pageable = PageRequest.of(pageIndex, size);
+        return branchRequestRepository.findAll(pageable);
     }
 
     public BranchRequest getBranchRequestById(Long id) {
