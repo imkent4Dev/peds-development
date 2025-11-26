@@ -45,6 +45,9 @@ import com.lyhorng.pedssystem.repository.branchRequest.BranchRequestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -268,12 +271,18 @@ public class PropertyService {
 
     // ==================== GET ALL ====================
     @Transactional(readOnly = true)
-    public List<PropertyResponseDto> getAllProperties() {
-        log.info("Fetching all properties");
+    public Page<PropertyResponseDto> getAllProperties(int page, int size) {
+        log.info("Fetching all properties - page: {}, size: {}", page, size);
 
-        return propertyRepository.findAll().stream()
-                .map(this::convertToResponseDto)
-                .collect(Collectors.toList());
+        // Convert 1-based page to 0-based for Spring Data
+        int pageIndex = Math.max(0, page - 1);
+        Pageable pageable = PageRequest.of(pageIndex, size);
+
+        // Fetch paginated data from repository
+        Page<Property> propertyPage = propertyRepository.findAll(pageable);
+
+        // Convert Page<Property> to Page<PropertyResponseDto>
+        return propertyPage.map(this::convertToResponseDto);
     }
 
     // ==================== DELETE ====================

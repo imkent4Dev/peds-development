@@ -2,6 +2,9 @@ package com.lyhorng.pedssystem.service.property;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.lyhorng.pedssystem.model.agency.Agency;
@@ -18,8 +21,10 @@ public class SourceTypeService {
     private final SourceTypeRepository sourceTypeRepository;
     private final AgencyRepository agencyRepository;
     
-    public List<BuildingSourceType> getAllSourceTypes() {
-        return sourceTypeRepository.findAll();
+    public Page<BuildingSourceType> getAllSourceTypes(int page, int size) {
+        int pageIndex = Math.max(0, page - 1);
+        Pageable pageable = PageRequest.of(pageIndex, size);
+        return sourceTypeRepository.findAll(pageable);
     }
     
     public List<Agency> getAgenciesBySourceType(Long sourceTypeId) {
