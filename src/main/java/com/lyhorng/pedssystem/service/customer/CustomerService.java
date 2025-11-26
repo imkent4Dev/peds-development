@@ -1,8 +1,12 @@
 package com.lyhorng.pedssystem.service.customer;
 
-import java.util.List;
 import java.util.Optional;
 
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,42 +21,70 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
 
-    // Create new customer with parameters (firstName, lastName, nid)
     @Transactional
-    public Customer createCustomer(String firstName, String lastName, String nid) {
-        // Add validation logic if needed
+    public Customer createCustomer(String firstName, String lastName, String fullName, String phoneNumber, String nid) {
         Customer customer = new Customer();
         customer.setFirstName(firstName);
         customer.setLastName(lastName);
+        customer.setFullName(fullName);
+        customer.setPhoneNumber(phoneNumber);
         customer.setNid(nid);
         return customerRepository.save(customer);
     }
 
-    // Get all customers
-    public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
+    public Page<Customer> getAllCustomers(int page, int size, String sortBy, String sortDir, String search) {
+        // Convert 1-based page to 0-based for Spring Data
+        int pageIndex = page > 0 ? page - 1 : 0;
+
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(pageIndex, size, sort);
+
+        if (search != null && !search.trim().isEmpty()) {
+            return customerRepository.searchCustomers(search.trim(), pageable);
+        }
+
+        return customerRepository.findAll(pageable);
     }
 
-    // Get customer by ID
     public Optional<Customer> getCustomerById(Long id) {
         return customerRepository.findById(id);
     }
 
-    // Update customer with parameters (firstName, lastName, nid)
     @Transactional
-    public Customer updateCustomer(Long id, String firstName, String lastName, String nid) {
+    public Customer updateCustomer(Long id, String firstName, String lastName, String fullName, String phoneNumber,
+            String nid) {
+        if (nid != null && !nid.isEmpty()) {
+            boolean isNidExist = customerRepository.existsByNid(nid);
+            if (isNidExist) {
+                throw new RuntimeException("The provided NID is already in use by another customer.");
+            }
+        }
+
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            boolean isPhoneExist = customerRepository.existsByPhoneNumber(phoneNumber);
+            if (isPhoneExist) {
+                throw new RuntimeException("The provided phone number is already in use by another customer.");
+            }
+        }
+
         Customer updatedCustomer = customerRepository.findById(id)
                 .map(customer -> {
+                    if (nid != null && !nid.isEmpty()) {
+                        customer.setNid(nid);
+                    }
                     customer.setFirstName(firstName);
                     customer.setLastName(lastName);
-                    customer.setNid(nid); // Update the nid as well
+                    customer.setFullName(fullName);
                     return customerRepository.save(customer);
                 })
                 .orElseThrow(() -> new RuntimeException("Customer not found with id " + id));
+
         return updatedCustomer;
     }
 
-    // Delete customer by ID
     @Transactional
     public void deleteCustomer(Long id) {
         if (!customerRepository.existsById(id)) {
