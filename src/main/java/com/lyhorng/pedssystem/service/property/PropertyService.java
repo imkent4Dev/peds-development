@@ -157,8 +157,12 @@ public class PropertyService {
         Property savedProperty = propertyRepository.save(property);
 
         // Create and save Land (1-to-1 relationship)
-        Land land = createLandFromDto(requestDto.getLand(), savedProperty);
-        savedProperty.setLand(land);
+        if (isLandDataProvided(requestDto.getLand())) {
+            // log.info("Land data provided, creating land for property: {}", savedProperty.getApplicationCode());
+            Land land = createLandFromDto(requestDto.getLand(), savedProperty);
+            savedProperty.setLand(land);
+            landRepository.save(land);
+        }
 
         // Create and save Buildings (1-to-Many relationship)
         if (requestDto.getBuildings() != null && !requestDto.getBuildings().isEmpty()) {
@@ -171,6 +175,19 @@ public class PropertyService {
         log.info("Property created successfully with application code: {}", savedProperty.getApplicationCode());
 
         return convertToResponseDto(savedProperty);
+    }
+
+    private boolean isLandDataProvided(LandRequestDto landDto) {
+        if (landDto == null) {
+            return false;
+        }
+
+        // Check if any meaningful data is provided
+        return landDto.getShapeId() != null ||
+                landDto.getTypeOfLotId() != null ||
+                landDto.getLandSize() != null ||
+                landDto.getLength() != null ||
+                landDto.getWidth() != null;
     }
 
     // ==================== UPDATE ====================
