@@ -42,6 +42,10 @@ public class PropertyResponseDto {
     private BuildingsBySourceDto buildingsBySource;
     private BuildingTotalsDto buildingTotals;
 
+    // Property photos and Google Map information (all optional)
+    private java.util.List<PropertyPhotoDto> photos;
+    private PropertyMapInfoDto mapInfo;
+
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
