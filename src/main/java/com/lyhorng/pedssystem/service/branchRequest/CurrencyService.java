@@ -1,7 +1,9 @@
 package com.lyhorng.pedssystem.service.branchRequest;
 
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.lyhorng.pedssystem.model.branchRequest.Currency;
@@ -13,7 +15,9 @@ public class CurrencyService {
     @Autowired
     public CurrencyRepository currencyRepository;
 
-    public List<Currency> getAllCurrency() {
-        return currencyRepository.findAll();
+    public Page<Currency> getAllCurrency(int page, int size) {
+        int pageIndex = Math.max(0, page -1);
+        Pageable pageable = PageRequest.of(pageIndex, size);
+        return currencyRepository.findAll(pageable);
     }
 }

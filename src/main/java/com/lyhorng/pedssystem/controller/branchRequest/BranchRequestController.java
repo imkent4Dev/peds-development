@@ -1,6 +1,7 @@
 package com.lyhorng.pedssystem.controller.branchRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -8,10 +9,10 @@ import com.lyhorng.pedssystem.dto.BranchRequest.BranchRequestDTO;
 import com.lyhorng.pedssystem.model.branchRequest.BranchRequest;
 import com.lyhorng.pedssystem.service.branchRequest.BranchRequestService;
 import com.lyhorng.common.response.ApiResponse;
+import com.lyhorng.common.response.PageResponse;
 
 import jakarta.validation.Valid;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/branchrequest")
@@ -30,9 +31,19 @@ public class BranchRequestController {
     
     // Get all branch requests
     @GetMapping("/list")
-    public ResponseEntity<ApiResponse<List<BranchRequest>>> getAllBranchRequests() {
-        List<BranchRequest> branchRequests = branchRequestService.getAllBranchRequests();
-        return ResponseEntity.ok(ApiResponse.success("Branch requests fetched successfully!", branchRequests));
+    public ResponseEntity<ApiResponse<PageResponse<BranchRequest>>> getAllBranchRequests(
+        @RequestParam(defaultValue = "1")  int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<BranchRequest> branchRequestsPage = branchRequestService.getAllBranchRequests(page, size);
+
+        PageResponse<BranchRequest> pageResponse = PageResponse.of(
+            branchRequestsPage.getContent(),
+            branchRequestsPage.getNumber() + 1,
+            branchRequestsPage.getSize()  ,
+            branchRequestsPage.getTotalElements());
+
+        return ResponseEntity.ok(ApiResponse.success("Branch requests fetched successfully!", pageResponse));
     }
     
     // Get a branch request by ID

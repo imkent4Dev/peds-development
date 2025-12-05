@@ -126,6 +126,16 @@ public class Property {
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Building> buildings = new ArrayList<>();
 
+    // ================== PROPERTY PHOTOS (1-to-Many, OPTIONAL) ==================
+    // Front / Left / Right / Inside photos are stored in separate table.
+    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PropertyPhoto> photos = new ArrayList<>();
+
+    // ================== GOOGLE MAP INFO (1-to-1, OPTIONAL) ==================
+    // Single map info record per property, all fields nullable.
+    @OneToOne(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private PropertyMapInfo mapInfo;
+
     // ================== AUDIT FIELDS ==================
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

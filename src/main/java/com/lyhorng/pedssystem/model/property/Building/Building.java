@@ -47,19 +47,10 @@ public class Building {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "building_type_id")
     private BuildingType buildingType;
-    
-    // Building Usage (Owner/Rent out)
-    @Enumerated(EnumType.STRING)
-    @Column(name = "building_usage")
-    private BuildingUsage buildingUsage;
-    
-    // Building Structure (I.P.S, semi-metal)
-    // @Column(name = "building_structure", length = 100)
-    // private String buildingStructure;
-    
+
     // Building Stories (total input)
-    @Column(name = "building_stories")
-    private Integer buildingStories;
+    @Column(name = "building_storey")
+    private Integer buildingStorey;
     
     // Building Size Unit (use input As: 1(sqm))
     @Column(name = "building_size_unit", precision = 15, scale = 2)

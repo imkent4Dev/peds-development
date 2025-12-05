@@ -1,99 +1,96 @@
 package com.lyhorng.pedssystem.controller.customer;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import com.lyhorng.common.response.ApiResponse;
-import com.lyhorng.common.response.PageResponse;
+import com.lyhorng.pedssystem.common.ApiResponse;
 import com.lyhorng.pedssystem.model.customer.Customer;
 import com.lyhorng.pedssystem.service.customer.CustomerService;
+import com.lyhorng.pedssystem.dto.customer.CustomerCreateRequest;
+import com.lyhorng.pedssystem.dto.customer.CustomerUpdateRequest;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/customers")
+@RequiredArgsConstructor
 public class CustomerController {
-    
-    @Autowired
-    private CustomerService customerService;
 
+    private final CustomerService customerService;
+
+    // ✔ Return LIST without paging
     @GetMapping("/list")
-    public ResponseEntity<ApiResponse<PageResponse<Customer>>> listAll(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir,
-            @RequestParam(required = false) String search) {
-        
-        Page<Customer> customerPage = customerService.getAllCustomers(page, size, sortBy, sortDir, search);
-        
-        // Convert Spring Page to your PageResponse
-        PageResponse<Customer> pageResponse = PageResponse.of(
-            customerPage.getContent(),
-            customerPage.getNumber() + 1,
-            customerPage.getSize(),
-            customerPage.getTotalElements()
-        );
-        
+    public ResponseEntity<ApiResponse<List<Customer>>> listAll() {
+        List<Customer> customers = customerService.getAllCustomers();
         return ResponseEntity.ok(
-            ApiResponse.success("Customers fetched successfully.", pageResponse)
-        );
+                ApiResponse.success("CUS-200", "Customer list fetched", "ទាញយកបញ្ជីអតិថិជនបានជោគជ័យ", customers));
     }
 
+    //  CREATE WITH DTO
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<Customer>> create(
-            @RequestParam("first_name") String firstName,
-            @RequestParam("last_name") String lastName,
-            @RequestParam("full_name") String fullName,
-            @RequestParam("phone_number") String phoneNumber,
-            @RequestParam("nid") String nid) {
-        try {
-            Customer customer = customerService.createCustomer(firstName, lastName, fullName, phoneNumber, nid);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.success("Customer created successfully.", customer));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Failed to create customer: " + e.getMessage()));
-        }
+    public ResponseEntity<ApiResponse<Customer>> create(@RequestBody CustomerCreateRequest request) {
+        Customer customer = customerService.createCustomer(
+                request.getFirstName(),
+                request.getLastName(),
+                request.getFullName(),
+                request.getPhoneNumber(),
+                request.getNid());
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(
+                        "CUS-201",
+                        "Customer created successfully",
+                        "បង្កើតអតិថិជនបានជោគជ័យ",
+                        customer));
     }
 
-    @PostMapping("/update")
+    //  UPDATE WITH DTO
+    @PutMapping("/update/{id}")
     public ResponseEntity<ApiResponse<Customer>> update(
-            @RequestParam("id") Long id,
-            @RequestParam("first_name") String firstName,
-            @RequestParam("last_name") String lastName,
-            @RequestParam("full_name") String fullName,
-            @RequestParam("phone_number") String phoneNumber,
-            @RequestParam("nid") String nid) {
-        try {
-            Customer updatedCustomer = customerService.updateCustomer(id, firstName, lastName, fullName, phoneNumber, nid);
-            return ResponseEntity.ok(ApiResponse.success("Customer updated successfully.", updatedCustomer));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Failed to update customer: " + e.getMessage()));
-        }
+            @PathVariable Long id,
+            @RequestBody CustomerUpdateRequest request) {
+        Customer updated = customerService.updateCustomer(
+                id,
+                request.getFirstName(),
+                request.getLastName(),
+                request.getFullName(),
+                request.getPhoneNumber(),
+                request.getNid());
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "CUS-200",
+                        "Customer updated successfully",
+                        "កែប្រែអតិថិជនបានជោគជ័យ",
+                        updated));
     }
 
-    @GetMapping("/view")
-    public ResponseEntity<ApiResponse<Customer>> view(@RequestParam("id") Long id) {
-        try {
-            Customer customer = customerService.getCustomerById(id)
-                    .orElseThrow(() -> new RuntimeException("Customer not found: " + id));
-            return ResponseEntity.ok(ApiResponse.success("Customer details fetched successfully.", customer));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("Customer not found: " + e.getMessage()));
-        }
+    //  GET BY ID
+    @GetMapping("/view/{id}")
+    public ResponseEntity<ApiResponse<Customer>> view(@PathVariable Long id) {
+        // The service already throws ResourceNotFoundException if not found
+        Customer customer = customerService.getCustomerById(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "CUS-200",
+                        "Customer fetched successfully",
+                        "ទាញយកព័ត៌មានអតិថិជនបានជោគជ័យ",
+                        customer));
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<ApiResponse<String>> delete(@RequestParam("id") Long id) {
-        try {
-            customerService.deleteCustomer(id);
-            return ResponseEntity.ok(ApiResponse.successNoData("Customer deleted successfully."));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("Customer not found: " + e.getMessage()));
-        }
+    //  DELETE BY ID
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+        customerService.deleteCustomer(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "CUS-200",
+                        "Customer deleted successfully",
+                        "លុបអតិថិជនបានជោគជ័យ",
+                        null));
     }
 }
