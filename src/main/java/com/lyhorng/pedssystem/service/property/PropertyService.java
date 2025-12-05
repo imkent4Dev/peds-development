@@ -750,8 +750,8 @@ public class PropertyService {
         building.setBuildingType(buildingTypeRepository.findById(buildingDto.getBuildingTypeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Building type not found")));
 
-        building.setBuildingUsage(buildingDto.getBuildingUsage());
-        building.setBuildingStories(buildingDto.getBuildingStories());
+        // building.setBuildingUsage(buildingDto.getBuildingUsage());
+        // building.setBuildingStories(buildingDto.getBuildingStories());
         building.setBuildingSizeUnit(buildingDto.getBuildingSizeUnit());
         building.setBuildingYearBuilt(buildingDto.getBuildingYearBuilt());
         building.setRemark(buildingDto.getRemark());
@@ -829,8 +829,7 @@ public class PropertyService {
             dto.setBuildingType(typeDto);
         }
 
-        dto.setBuildingUsage(building.getBuildingUsage());
-        dto.setBuildingStories(building.getBuildingStories());
+        dto.setBuildingStories(building.getBuildingStorey());
         dto.setBuildingSizeUnit(building.getBuildingSizeUnit());
         dto.setBuildingYearBuilt(building.getBuildingYearBuilt());
         dto.setRemark(building.getRemark());

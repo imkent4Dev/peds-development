@@ -51,9 +51,7 @@ public class BuildingMapper {
 
         // Other properties
         building.setBuildingEvaluation(dto.getBuildingEvaluation());
-        building.setBuildingUsage(dto.getBuildingUsage());
-        // building.setBuildingStructure(dto.getBuildingStructure());
-        building.setBuildingStories(dto.getBuildingStories());
+        building.setBuildingStorey(dto.getStorey());
         building.setBuildingSizeUnit(dto.getBuildingSizeUnit());
         building.setBuildingYearBuilt(dto.getBuildingYearBuilt());
         building.setRemark(dto.getRemark());

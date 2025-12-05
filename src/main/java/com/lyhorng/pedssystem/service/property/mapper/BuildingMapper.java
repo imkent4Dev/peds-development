@@ -12,8 +12,7 @@ public class BuildingMapper {
     public Building requestToEntity(BuildingRequestDto dto) {
         Building b = new Building();
         b.setBuildingEvaluation(dto.getBuildingEvaluation());
-        b.setBuildingUsage(dto.getBuildingUsage());
-        b.setBuildingStories(dto.getBuildingStories());
+        // b.setBuildingStories(dto.getBuildingStories());
         b.setBuildingSizeUnit(dto.getBuildingSizeUnit());
         b.setBuildingYearBuilt(dto.getBuildingYearBuilt());
         b.setRemark(dto.getRemark());
