@@ -89,7 +89,7 @@ public class LocationController {
                 villages = locationService.getVillagesByCommuneId(communeId);
             } else {
                 // Get all villages
-                villages = locationService.getAllVillages();
+                villages = locationService.getVillages();
             }
             return ResponseEntity.ok(
                     ApiResponse.success("Villages retrieved successfully", villages));

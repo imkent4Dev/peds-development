@@ -79,7 +79,7 @@ public class LocationService {
 
     // ===================== VILLAGE =====================
     @Transactional(readOnly = true)
-    public List<Village> getAllVillages() {
+    public List<Village> getVillages() {
         return villageRepository.findAll();
     }
 
