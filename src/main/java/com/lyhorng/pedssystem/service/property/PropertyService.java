@@ -1,20 +1,13 @@
 package com.lyhorng.pedssystem.service.property;
 
 import com.lyhorng.pedssystem.dto.property.*;
-import com.lyhorng.pedssystem.dto.property.building.AgencySummaryDto;
-import com.lyhorng.pedssystem.dto.property.building.BuildingRequestDto;
-import com.lyhorng.pedssystem.dto.property.building.BuildingResponseDto;
-import com.lyhorng.pedssystem.dto.property.building.BuildingSummaryDto;
-import com.lyhorng.pedssystem.dto.property.building.BuildingTotalsDto;
-import com.lyhorng.pedssystem.dto.property.building.BuildingTypeDto;
-import com.lyhorng.pedssystem.dto.property.building.BuildingsBySourceDto;
-import com.lyhorng.pedssystem.dto.property.building.FloorAreaRequestDto;
-import com.lyhorng.pedssystem.dto.property.building.FloorAreaResponseDto;
-import com.lyhorng.pedssystem.dto.property.building.FloorDescriptionDto;
-import com.lyhorng.pedssystem.dto.property.building.SourceTypeSummaryDto;
+import com.lyhorng.pedssystem.dto.property.building.*;
+
 import com.lyhorng.pedssystem.enums.EvaStatus;
 import com.lyhorng.pedssystem.enums.FloorAreaType;
+
 import com.lyhorng.pedssystem.exception.ResourceNotFoundException;
+
 import com.lyhorng.pedssystem.model.property.Property;
 import com.lyhorng.pedssystem.model.property.building.Building;
 import com.lyhorng.pedssystem.model.property.building.BuildingSourceType;
@@ -24,20 +17,11 @@ import com.lyhorng.pedssystem.model.property.land.Land;
 import com.lyhorng.pedssystem.model.agency.Agency;
 import com.lyhorng.pedssystem.model.branchRequest.BranchRequest;
 import com.lyhorng.pedssystem.model.customer.Customer;
+
 import com.lyhorng.pedssystem.repository.property.*;
-import com.lyhorng.pedssystem.repository.property.building.BuildingRepository;
-import com.lyhorng.pedssystem.repository.property.building.BuildingTypeRepository;
-import com.lyhorng.pedssystem.repository.property.building.FloorAreaRepository;
-import com.lyhorng.pedssystem.repository.property.building.FloorDescriptionRepository;
-import com.lyhorng.pedssystem.repository.property.building.SourceTypeRepository;
-import com.lyhorng.pedssystem.repository.property.land.FlatUnitTypeRepository;
-import com.lyhorng.pedssystem.repository.property.land.LandRepository;
-import com.lyhorng.pedssystem.repository.property.land.LandShapeRepository;
-import com.lyhorng.pedssystem.repository.property.land.TypeOfLotRepository;
-import com.lyhorng.pedssystem.repository.property.location.CommuneRepository;
-import com.lyhorng.pedssystem.repository.property.location.DistrictRepository;
-import com.lyhorng.pedssystem.repository.property.location.ProvinceRepository;
-import com.lyhorng.pedssystem.repository.property.location.VillageRepository;
+import com.lyhorng.pedssystem.repository.property.building.*;
+import com.lyhorng.pedssystem.repository.property.land.*;
+import com.lyhorng.pedssystem.repository.property.location.*;
 import com.lyhorng.pedssystem.repository.customer.CustomerRepository;
 import com.lyhorng.pedssystem.repository.agency.AgencyRepository;
 import com.lyhorng.pedssystem.repository.branchRequest.BranchRequestRepository;
@@ -57,7 +41,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 public class PropertyService {
 
     private final PropertyRepository propertyRepository;
