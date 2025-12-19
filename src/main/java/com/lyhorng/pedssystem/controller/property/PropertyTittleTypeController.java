@@ -1,14 +1,15 @@
 package com.lyhorng.pedssystem.controller.property;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.lyhorng.common.response.ApiResponse;
+import com.lyhorng.common.response.PageResponse;
 import com.lyhorng.pedssystem.model.property.PropertyTitleType;
 import com.lyhorng.pedssystem.service.property.PropertyTittleTypeService;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/propertytitletypes")
@@ -17,14 +18,20 @@ public class PropertyTittleTypeController {
     @Autowired
     private PropertyTittleTypeService propertyTittleTypeService;
 
-    // Route for listing all property title types
     @GetMapping("/list")
-    public ResponseEntity<ApiResponse<List<PropertyTitleType>>> listAll() {
-        List<PropertyTitleType> propertyTittleTypes = propertyTittleTypeService.getAllPropertyTitleTypes();
-        return ResponseEntity.ok(ApiResponse.success("Property Title Types fetched successfully.", propertyTittleTypes));
+    public ResponseEntity<ApiResponse<PageResponse<PropertyTitleType>>> listAll(
+        @RequestParam(defaultValue = "1") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<PropertyTitleType> propertyTittleTypes = propertyTittleTypeService.getAllPropertyTitleTypes(page, size);
+        PageResponse<PropertyTitleType> pageResponse = PageResponse.of(
+            propertyTittleTypes.getContent(), 
+            propertyTittleTypes.getNumber() + 1, 
+            propertyTittleTypes.getSize(), 
+            propertyTittleTypes.getTotalElements());
+        return ResponseEntity.ok(ApiResponse.success("Property Title Types fetched successfully.", pageResponse));
     }
 
-    // Route for creating a new property title type
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<PropertyTitleType>> create(
             @RequestParam("titleType") String titleType,
@@ -37,7 +44,6 @@ public class PropertyTittleTypeController {
         }
     }
 
-    // Route for updating an existing property title type
     @PostMapping("/update")
     public ResponseEntity<ApiResponse<PropertyTitleType>> update(
             @RequestParam("id") Long id,
@@ -51,7 +57,6 @@ public class PropertyTittleTypeController {
         }
     }
 
-    // Route for deleting a property title type
     @PostMapping("/delete")
     public ResponseEntity<ApiResponse<String>> delete(@RequestParam("id") Long id) {
         try {
@@ -62,7 +67,6 @@ public class PropertyTittleTypeController {
         }
     }
 
-    // Route for viewing (getting details of) a property title type
     @GetMapping("/view")
     public ResponseEntity<ApiResponse<PropertyTitleType>> view(@RequestParam("id") Long id) {
         try {

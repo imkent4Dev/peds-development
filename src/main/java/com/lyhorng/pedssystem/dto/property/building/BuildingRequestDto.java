@@ -1,9 +1,11 @@
 package com.lyhorng.pedssystem.dto.property.building;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.lyhorng.pedssystem.enums.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.persistence.Column;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
@@ -13,9 +15,10 @@ import java.util.ArrayList;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class BuildingRequestDto {
     
-    private Long sourceTypeId;  // Change from enum to ID
+    private Long sourceTypeId;  // SME, MEGA, Branch, Agency relate with agency id
     private Long agencyId; 
     
     private BuildingEvaluation buildingEvaluation;
@@ -23,12 +26,8 @@ public class BuildingRequestDto {
     @NotNull(message = "Building type is required")
     private Long buildingTypeId;
     
-    private BuildingUsage buildingUsage;
-    
-    private String buildingStructure;
-    
-    @Min(value = 1, message = "Building stories must be at least 1")
-    private Integer buildingStories;
+    @Column(name = "building_storey")
+    private Integer Storey;
     
     @DecimalMin(value = "0", message = "Building size unit must be greater than or equal to 0")
     private BigDecimal buildingSizeUnit;

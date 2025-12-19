@@ -5,9 +5,13 @@ import com.lyhorng.pedssystem.dto.property.PropertyResponseDto;
 import com.lyhorng.pedssystem.enums.EvaStatus;
 import com.lyhorng.pedssystem.service.property.PropertyService;
 import com.lyhorng.common.response.ApiResponse;
+import com.lyhorng.common.response.PageResponse;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,15 +30,18 @@ public class PropertyController {
     private final PropertyService propertyService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<PropertyResponseDto>> createProperty(@Valid @RequestBody PropertyRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<PropertyResponseDto>> createProperty(
+            @Valid @RequestBody PropertyRequestDto requestDto) {
         log.info("REST request to create property");
 
         try {
             PropertyResponseDto createdProperty = propertyService.createProperty(requestDto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Property created successfully", createdProperty));
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success("Property created successfully", createdProperty));
         } catch (Exception e) {
             log.error("Error creating property: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error("Failed to create property: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Failed to create property: " + e.getMessage()));
         }
     }
 
@@ -42,15 +49,16 @@ public class PropertyController {
     public ResponseEntity<ApiResponse<PropertyResponseDto>> updateProperty(
             @PathVariable Long id,
             @Valid @RequestBody PropertyRequestDto requestDto) {
-        
+
         log.info("REST request to update property with id: {}", id);
-        
+
         try {
             PropertyResponseDto updatedProperty = propertyService.updateProperty(id, requestDto);
             return ResponseEntity.ok(ApiResponse.success("Property updated successfully", updatedProperty));
         } catch (Exception e) {
             log.error("Error updating property: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error("Failed to update property: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Failed to update property: " + e.getMessage()));
         }
     }
 
@@ -63,20 +71,33 @@ public class PropertyController {
             return ResponseEntity.ok(ApiResponse.success("Property retrieved successfully", property));
         } catch (Exception e) {
             log.error("Error retrieving property: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Failed to retrieve property: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Failed to retrieve property: " + e.getMessage()));
         }
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PropertyResponseDto>>> getAllProperties() {
-        log.info("REST request to get all properties");
-
+    public ResponseEntity<ApiResponse<PageResponse<PropertyResponseDto>>> getAllProperties(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        log.info("REST request to get all properties - page: {}, size: {}", page, size);
         try {
-            List<PropertyResponseDto> properties = propertyService.getAllProperties();
-            return ResponseEntity.ok(ApiResponse.success("Properties retrieved successfully", properties));
+            Page<PropertyResponseDto> propertyPage = propertyService.getAllProperties(page, size);
+
+            PageResponse<PropertyResponseDto> pageResponse = PageResponse.of(
+                    propertyPage.getContent(),
+                    propertyPage.getNumber() + 1,
+                    propertyPage.getSize(),
+                    propertyPage.getTotalElements());
+
+            return ResponseEntity.ok(
+                    ApiResponse.success("Properties retrieved successfully", pageResponse));
         } catch (Exception e) {
             log.error("Error retrieving properties: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error("Failed to retrieve properties: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to retrieve properties: " + e.getMessage()));
         }
     }
 
@@ -89,7 +110,8 @@ public class PropertyController {
             return ResponseEntity.ok(ApiResponse.success("Property deleted successfully", null));
         } catch (Exception e) {
             log.error("Error deleting property: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Failed to delete property: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Failed to delete property: " + e.getMessage()));
         }
     }
 
@@ -102,12 +124,14 @@ public class PropertyController {
             return ResponseEntity.ok(ApiResponse.success("Property retrieved successfully", property));
         } catch (Exception e) {
             log.error("Error retrieving property: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Failed to retrieve property: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Failed to retrieve property: " + e.getMessage()));
         }
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<ApiResponse<List<PropertyResponseDto>>> getPropertiesByEvaStatus(@PathVariable EvaStatus status) {
+    public ResponseEntity<ApiResponse<List<PropertyResponseDto>>> getPropertiesByEvaStatus(
+            @PathVariable EvaStatus status) {
         log.info("REST request to get properties with status: {}", status);
 
         try {
@@ -115,7 +139,8 @@ public class PropertyController {
             return ResponseEntity.ok(ApiResponse.success("Properties retrieved successfully", properties));
         } catch (Exception e) {
             log.error("Error retrieving properties: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error("Failed to retrieve properties: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to retrieve properties: " + e.getMessage()));
         }
     }
 
@@ -128,7 +153,8 @@ public class PropertyController {
             return ResponseEntity.ok(ApiResponse.success("Properties retrieved successfully", properties));
         } catch (Exception e) {
             log.error("Error retrieving properties: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error("Failed to retrieve properties: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to retrieve properties: " + e.getMessage()));
         }
     }
 

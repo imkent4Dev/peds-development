@@ -72,4 +72,13 @@ public class PropertyRequestDto {
     // Buildings (1-to-Many) - Optional, can be empty list
     @Valid
     private List<BuildingRequestDto> buildings = new ArrayList<>();
+
+    // ==================== PROPERTY MEDIA (OPTIONAL) ====================
+    // Photo list (front, left, right, inside, etc.). Can be null or empty.
+    @Valid
+    private List<PropertyPhotoDto> photos = new ArrayList<>();
+
+    // Google Map information. Entire object can be null if not provided.
+    @Valid
+    private PropertyMapInfoDto mapInfo;
 }

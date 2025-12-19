@@ -9,6 +9,8 @@ import com.lyhorng.pedssystem.enums.FloorAreaType;
 import com.lyhorng.pedssystem.exception.ResourceNotFoundException;
 
 import com.lyhorng.pedssystem.model.property.Property;
+import com.lyhorng.pedssystem.model.property.PropertyMapInfo;
+import com.lyhorng.pedssystem.model.property.PropertyPhoto;
 import com.lyhorng.pedssystem.model.property.building.Building;
 import com.lyhorng.pedssystem.model.property.building.BuildingSourceType;
 import com.lyhorng.pedssystem.model.property.building.FloorArea;
@@ -29,6 +31,9 @@ import com.lyhorng.pedssystem.repository.branchRequest.BranchRequestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,6 +69,8 @@ public class PropertyService {
     private final SourceTypeRepository sourceTypeRepository;
     private final AgencyRepository agencyRepository;
     private final BuildingRepository buildingRepository;
+    private final PropertyPhotoRepository propertyPhotoRepository;
+    private final PropertyMapInfoRepository propertyMapInfoRepository;
 
     public PropertyResponseDto createProperty(PropertyRequestDto requestDto) {
         log.info("Creating new property with evaluation status: {}", requestDto.getEvaStatus());
@@ -137,8 +144,12 @@ public class PropertyService {
         Property savedProperty = propertyRepository.save(property);
 
         // Create and save Land (1-to-1 relationship)
-        Land land = createLandFromDto(requestDto.getLand(), savedProperty);
-        savedProperty.setLand(land);
+        if (isLandDataProvided(requestDto.getLand())) {
+            // log.info("Land data provided, creating land for property: {}", savedProperty.getApplicationCode());
+            Land land = createLandFromDto(requestDto.getLand(), savedProperty);
+            savedProperty.setLand(land);
+            landRepository.save(land);
+        }
 
         // Create and save Buildings (1-to-Many relationship)
         if (requestDto.getBuildings() != null && !requestDto.getBuildings().isEmpty()) {
@@ -148,9 +159,48 @@ public class PropertyService {
             }
         }
 
+        // Create and save Photos (1-to-Many, optional)
+        if (requestDto.getPhotos() != null && !requestDto.getPhotos().isEmpty()) {
+            List<PropertyPhoto> photos = new ArrayList<>();
+            for (PropertyPhotoDto photoDto : requestDto.getPhotos()) {
+                PropertyPhoto photo = new PropertyPhoto();
+                photo.setProperty(savedProperty);
+                photo.setPhotoType(photoDto.getPhotoType());
+                photo.setFilePath(photoDto.getFilePath());
+                photo.setDisplayOrder(photoDto.getDisplayOrder());
+                photos.add(propertyPhotoRepository.save(photo));
+            }
+            savedProperty.setPhotos(photos);
+        }
+
+        // Create and save MapInfo (1-to-1, optional and fully nullable)
+        if (requestDto.getMapInfo() != null) {
+            PropertyMapInfo mapInfo = new PropertyMapInfo();
+            mapInfo.setProperty(savedProperty);
+            mapInfo.setDrawLine(requestDto.getMapInfo().getDrawLine());
+            mapInfo.setStyle(requestDto.getMapInfo().getStyle());
+            mapInfo.setLatitude(requestDto.getMapInfo().getLatitude());
+            mapInfo.setLongitude(requestDto.getMapInfo().getLongitude());
+            mapInfo.setDocumentPath(requestDto.getMapInfo().getDocumentPath());
+            savedProperty.setMapInfo(propertyMapInfoRepository.save(mapInfo));
+        }
+
         log.info("Property created successfully with application code: {}", savedProperty.getApplicationCode());
 
         return convertToResponseDto(savedProperty);
+    }
+
+    private boolean isLandDataProvided(LandRequestDto landDto) {
+        if (landDto == null) {
+            return false;
+        }
+
+        // Check if any meaningful data is provided
+        return landDto.getShapeId() != null ||
+                landDto.getTypeOfLotId() != null ||
+                landDto.getLandSize() != null ||
+                landDto.getLength() != null ||
+                landDto.getWidth() != null;
     }
 
     // ==================== UPDATE ====================
@@ -232,6 +282,44 @@ public class PropertyService {
             property.setLand(land);
         }
 
+        // Replace Photos list (simple strategy: delete and re-insert)
+        if (requestDto.getPhotos() != null) {
+            if (property.getPhotos() != null && !property.getPhotos().isEmpty()) {
+                propertyPhotoRepository.deleteAll(property.getPhotos());
+                property.getPhotos().clear();
+            }
+
+            if (!requestDto.getPhotos().isEmpty()) {
+                List<PropertyPhoto> newPhotos = new ArrayList<>();
+                for (PropertyPhotoDto photoDto : requestDto.getPhotos()) {
+                    PropertyPhoto photo = new PropertyPhoto();
+                    photo.setProperty(property);
+                    photo.setPhotoType(photoDto.getPhotoType());
+                    photo.setFilePath(photoDto.getFilePath());
+                    photo.setDisplayOrder(photoDto.getDisplayOrder());
+                    newPhotos.add(propertyPhotoRepository.save(photo));
+                }
+                property.setPhotos(newPhotos);
+            }
+        }
+
+        // Update or create MapInfo (if mapInfo included in request)
+        if (requestDto.getMapInfo() != null) {
+            PropertyMapInfo mapInfo = property.getMapInfo();
+            if (mapInfo == null) {
+                mapInfo = new PropertyMapInfo();
+                mapInfo.setProperty(property);
+            }
+            mapInfo.setDrawLine(requestDto.getMapInfo().getDrawLine());
+            mapInfo.setStyle(requestDto.getMapInfo().getStyle());
+            mapInfo.setLatitude(requestDto.getMapInfo().getLatitude());
+            mapInfo.setLongitude(requestDto.getMapInfo().getLongitude());
+            mapInfo.setDocumentPath(requestDto.getMapInfo().getDocumentPath());
+            property.setMapInfo(propertyMapInfoRepository.save(mapInfo));
+        } else {
+            // If client explicitly sends null, we leave existing map info as-is.
+        }
+
         Property updatedProperty = propertyRepository.save(property);
         log.info("Property updated successfully with id: {}", id);
 
@@ -251,12 +339,18 @@ public class PropertyService {
 
     // ==================== GET ALL ====================
     @Transactional(readOnly = true)
-    public List<PropertyResponseDto> getAllProperties() {
-        log.info("Fetching all properties");
+    public Page<PropertyResponseDto> getAllProperties(int page, int size) {
+        log.info("Fetching all properties - page: {}, size: {}", page, size);
 
-        return propertyRepository.findAll().stream()
-                .map(this::convertToResponseDto)
-                .collect(Collectors.toList());
+        // Convert 1-based page to 0-based for Spring Data
+        int pageIndex = Math.max(0, page - 1);
+        Pageable pageable = PageRequest.of(pageIndex, size);
+
+        // Fetch paginated data from repository
+        Page<Property> propertyPage = propertyRepository.findAll(pageable);
+
+        // Convert Page<Property> to Page<PropertyResponseDto>
+        return propertyPage.map(this::convertToResponseDto);
     }
 
     // ==================== DELETE ====================
@@ -471,6 +565,33 @@ public class PropertyService {
             dto.setBuildingTotals(totals);
         }
 
+        // Photos (1-to-Many)
+        if (property.getPhotos() != null && !property.getPhotos().isEmpty()) {
+            List<PropertyPhotoDto> photoDtos = new ArrayList<>();
+            for (PropertyPhoto photo : property.getPhotos()) {
+                PropertyPhotoDto photoDto = new PropertyPhotoDto();
+                photoDto.setId(photo.getId());
+                photoDto.setPhotoType(photo.getPhotoType());
+                photoDto.setFilePath(photo.getFilePath());
+                photoDto.setDisplayOrder(photo.getDisplayOrder());
+                photoDtos.add(photoDto);
+            }
+            dto.setPhotos(photoDtos);
+        }
+
+        // Map info (1-to-1)
+        if (property.getMapInfo() != null) {
+            PropertyMapInfo mapInfo = property.getMapInfo();
+            PropertyMapInfoDto mapDto = new PropertyMapInfoDto();
+            mapDto.setId(mapInfo.getId());
+            mapDto.setDrawLine(mapInfo.getDrawLine());
+            mapDto.setStyle(mapInfo.getStyle());
+            mapDto.setLatitude(mapInfo.getLatitude());
+            mapDto.setLongitude(mapInfo.getLongitude());
+            mapDto.setDocumentPath(mapInfo.getDocumentPath());
+            dto.setMapInfo(mapDto);
+        }
+
         dto.setCreatedAt(property.getCreatedAt());
         dto.setUpdatedAt(property.getUpdatedAt());
 
@@ -612,8 +733,8 @@ public class PropertyService {
         building.setBuildingType(buildingTypeRepository.findById(buildingDto.getBuildingTypeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Building type not found")));
 
-        building.setBuildingUsage(buildingDto.getBuildingUsage());
-        building.setBuildingStories(buildingDto.getBuildingStories());
+        // building.setBuildingUsage(buildingDto.getBuildingUsage());
+        // building.setBuildingStories(buildingDto.getBuildingStories());
         building.setBuildingSizeUnit(buildingDto.getBuildingSizeUnit());
         building.setBuildingYearBuilt(buildingDto.getBuildingYearBuilt());
         building.setRemark(buildingDto.getRemark());
@@ -691,8 +812,7 @@ public class PropertyService {
             dto.setBuildingType(typeDto);
         }
 
-        dto.setBuildingUsage(building.getBuildingUsage());
-        dto.setBuildingStories(building.getBuildingStories());
+        dto.setBuildingStories(building.getBuildingStorey());
         dto.setBuildingSizeUnit(building.getBuildingSizeUnit());
         dto.setBuildingYearBuilt(building.getBuildingYearBuilt());
         dto.setRemark(building.getRemark());
